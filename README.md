@@ -1,4 +1,8 @@
-# Learning nix
+<div align="center">
+    <img src="https://git.open-communication.net/secretkookie/nyantec-nix-workshops/-/raw/master/images/logo.png" width="256px"/>
+    <h1>Learning nix</h1>
+</div>
+
 
 This repository contains workshop material intended to teach the [`nix`] ecosystem.
 That includes: `nix` the tool, `Nix` the language, and `NixOS` the distribution.
