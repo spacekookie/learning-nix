@@ -74,21 +74,60 @@ yielding an error!
 
 ---
 
+## Reproducible
 
-* The same operation yields in the same result
-* Build outputs are hashed, and can be re-used
+* The same build inputs yield the same build outputs
+  * Build inputs are hashed, and can be re-used if already built
+* If build inputs _may_ change, derivations are fixed by their output
+  hash (called "fixed output derivations")
 
-<br />
+---
+
+## Reproducible
 
 ```
 build-01-set = [ 9gkyl3knyalavd5v77rb0ciwry1r4v77-foo
                  gm1vihrf3d8hks2fgjfgfyn5wm2rs49a-bar ]
 
 build-02-set = [ 9gkyl3knyalavd5v77rb0ciwry1r4v77-foo
-                 psfi2l3kqpsp2zv66ngnaqhxnbzx1dn7-baz ]
+                 psfi2l3kqpsp2zv66ngnaqhxnbzx1dn7-bar ]
 ```
 
-Because the hash of `foo` is the same, it can be re-used.
+Because the hash of the `foo` inputs is the same, it can be re-used
+from the store.  The `bar` package was updated, and thus needs to be
+built.
+
+---
+
+### Tangent: the nix store
+
+* Usually located at `/nix/store`
+* Special permission setup
+  * Owned by `root`:`nixbld`
+  * Write permissions on `/nix/store` for owner and group
+  * No write permissions for actual outputs (e.g. `nix/store/<hash>-foo/`)
+  * Setting `t` on `/nix/store` means that removing a file requires
+    write-permission on the file, not just the containing directory!
+
+---
+
+### Tangent: the nix store
+
+```
+$ /n/s/zzg015adjliwmdm4jfkbhnkpw6dmq1ym-urxvt-autocomplete-all-the-things-1.6.0> tree -p                                                                                   
+.
+└── [dr-xr-xr-x]  lib
+    └── [dr-xr-xr-x]  urxvt
+        └── [dr-xr-xr-x]  perl
+            └── [-r-xr-xr-x]  autocomplete-ALL-the-things
+
+3 directories, 1 file
+```
+
+The result of all this?
+
+A `nixbld` user can create a new directory and store build outputs,
+but never remove or change them again!  Build outputs are read-only.
 
 ---
 
