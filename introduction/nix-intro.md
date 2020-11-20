@@ -156,15 +156,46 @@ gets assigned to `makeYouUnderstand`.
 
 ## Functional
 
-* functions `(param: ...)` are first-class types
-* functions can be the result of a function: `(b a { param = 5; })`
-  passes function `a` to `b` and then calls `b`.
-* Parenthesis are your friend: `(b (a { param = 5; }))` calls a with
-  `{ param = 5; }`, then the result of that function is passed to `b`.
+Functions are a first-class type in the `Nix` language/ ecosystem.
+
+* Can be passed into functions as parameters
+* Can be returned from functions as results
+* Syntax is a bit weird:
+  * `(argOne: argTwo: argThree: ...)` is a function with three parameters
+  * If you have haskell experience this might seem familiar (I do not :P)
+
+---
+
+## Functional examples
+
+A great way to learn the syntax in the `nix repl`! (Run `nix repl
+'<nixpkgs>'` to get started)
+
+Note: in the `repl`, simple assignments are possible (i.e. `a = 5`).
+This is not the case in a normal `Nix` environment!
+
+---
+
+## Functional examples
+
+Having some fun in the nix-repl!
+
+```nix
+nix-repl> a = (attrs: attrs.param)
+nix-repl> b = (funct: (val: val + 1) funct)
+nix-repl> a { param = 5; }
+5
+nix-repl> b (a { param = 5; })
+6
+```
+
+Use parethesis when parameter order is ambigous!
 
 ---
 
 # Nix language
+
+---
 
 
 ```nix
