@@ -4,7 +4,7 @@ stdenv.mkDerivation {
   name = "nix-course";
   src = ./.;
 
-  buildInputs = with pkgs; [ gnumake pandoc ];
+  nativeBuildInputs = with pkgs; [ gnumake pandoc ];
 
   installPhase = ''
     mkdir $out
