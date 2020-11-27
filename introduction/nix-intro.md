@@ -12,7 +12,7 @@ TODO: change the title maybe -->
 
 ### Somewhat philosophical definition
 
-> `nix` is an ecosystem for expressing various technological systems.
+> nix is an ecosystem for expressing various technological systems.
 
 ---
 
@@ -48,7 +48,9 @@ $ useradd spacekookie -d /home
 
 ---
 
-## Declarative wrappers
+## Declarative onion
+
+This system works in layers!
 
 1. Your configuration sets a value (`users.spacekookie.homeDir = "/home";`)
 2. `users` module provides options, and evaluates settings
@@ -59,7 +61,7 @@ $ useradd spacekookie -d /home
 
 ## Reproducible
 
-* `nix` configuration changes are idempotent
+* Nix configuration changes are idempotent
 
 ```nix
 users.spacekookie {
@@ -154,7 +156,7 @@ gets assigned to `makeYouUnderstand`.
 
 ## Functional
 
-Functions are a first-class type in the `Nix` language/ ecosystem.
+Functions are a first-class type in the Nix language/ ecosystem.
 
 * Can be passed into functions as parameters
 * Can be returned from functions as results
@@ -171,8 +173,8 @@ A great way to learn the syntax in the `nix repl`! (Run `nix repl
 
 <br/>
 
-Note: in the `repl`, simple assignments are possible (i.e. `a = 5`).
-This is not the case in a normal `Nix` environment!
+Note: in the repl, simple assignments are possible (i.e. `a = 5`).
+This is not the case in a normal Nix environment (more on that later!)
 
 ---
 
@@ -210,11 +212,12 @@ nix-repl> { never = abort "oh no"; use = "I'm a string"; }.use
 ## Overview
 
 * Implemented in C++ and nix
-* `builtins` contains basic tools (such as `add`, `abort`, `import`, ...)
+* Comments: `#` for lines, `/* */` for blocks
+* `builtins` contains basic operations (`add`, `abort`, ...)
 * `nixpkgs` provides more utilities
-  * `lib` has more advanced builders, generators, and iterator tools
-  * `stdenv` has packaging basics (such as `mkDerivation`)
-  * `pkgs/build-support` exports many build utilities (such as `fetchFromGitHub`)
+  * `lib`: generators, and iterator tools
+  * `stdenv`: packaging basics (like `mkDerivation`)
+  * `pkgs/build-support`: various build utilities (like `fetchFromGitHub`)
 
 ---
 
@@ -238,12 +241,11 @@ Types are defined in `lib.types` in `nixpkgs`.
   * Numbers ( `5` or `1.25` )
   * Boolean ( `true` or `false` )
   * Path ( `/nix/store` or `./.` )
-  * URI ( `http://example.com` )
   * Null ( `null` )
 
 ---
 
-## Assignments all the way down
+### Assignments all the way down
 
 ```nix
 {
@@ -264,6 +266,9 @@ Types are defined in `lib.types` in `nixpkgs`.
 
 ## `let` statement
 
+* Pre-define a set of variables for a given scope
+* There are no "global varibales", only scope-specific bindings
+
 ```nix
 let
   wine = pkgs.wine.override {
@@ -276,14 +281,12 @@ in
 }
 ```
 
-This is the same as the previous example.
-
 ---
 
 ## `inherit` statement
 
-* The same code can be optimised further with `inherit`
 * Take a value from one scope and move it to another
+* Essentially `{ inherit foo; }` is the same as writing `{ foo = foo }`
 
 ```nix
 let
@@ -292,14 +295,16 @@ let
     wineRelease = "staging";
   };
 in
-  { inherit package; }
+{ 
+  inherit package;
+}
 ```
 
 ---
 
 ## `import` statement
 
-* Actually defined in `builtins`
+* Not _technically_ a keyword (defined in `builtins`)
 * Loads, parses, and imports the nix expression at the given path
 
 ```nix
@@ -310,10 +315,7 @@ in
 ```
 
 ```nix
-{
-  mod = "Mod4";
-  # ...
-}
+{ mod = "Mod4"; /* ... */ }
 ```
 
 ---
@@ -334,6 +336,8 @@ with lib;
 }
 ```
 
+---
+
 ## `rec` statement
 
 * Allow for recursive self-referencing in attribute sets
@@ -345,6 +349,66 @@ error: undefined variable 'y' at (string):1:7
 
 nix-repl> rec { x = y - 10; y = 1322; }.x
 1312
+```
+
+Quiz: how would you write this with a `let`?
+
+---
+
+## Quiz answer (rec vs let)
+
+```
+nix-repl> let 
+            y = 1322; 
+          in 
+            { x = y - 10; inherit y; }.x
+1312
+```
+
+---
+
+## Destructuring "operator"
+
+* Whenever an attribut set is accepted as a parameter, you can
+  destructure it
+* Keys become optional via `?` operator
+* Additional keys are ignored via `...` operator
+
+```nix
+nix-repl> fa = attr: [ attr.a attr.b ]
+nix-repl> fb = { a, b }: [ a b ]
+nix-repl> fa { a = "a"; b = "b"; }
+[ "a" "b" ]
+nix-repl> fb { a = "a"; b = "b"; }
+[ "a" "b" ]
+```
+
+---
+
+## Destructuring "operator"
+
+```nix
+nix-repl> f { a = "a"; }
+error: function at (...) called without required argument 'b'
+
+nix-repl> f { a = "a"; b = "b"; c = "c"; }
+error: function at (...) called with unexpected argument 'c'
+```
+
+Quiz: change `f` to make the function invocations work
+
+---
+
+## Quiz answer (destructuring)
+
+```nix
+nix-repl> f = { a, b ? null, ... }: [ a b ]
+nix-repl> f { a = "a"; }
+[ "a" null ]
+nix-repl> f { a = "a"; b = "b"; c = "c"; }
+[ "a" "b" ]
+nix-repl> f { a = "a"; c = "c"; }
+[ "a" null ]
 ```
 
 # Building software
@@ -359,13 +423,11 @@ nix-repl> rec { x = y - 10; y = 1322; }.x
 * Accessed in nix via `<>` accessor (e.g. `<nixpkgs>`)
   * `import <nixpkgs>` imports `nixpkgs` key from the path (which is a function)
 
-
-
 ---
 
 ## Standalone builders
 
-* Allow a file to be evaluated as a root
+* Load `<nixpkgs>` from `$NIX_PATH` (making it the entry-point)
 * Load various things into scope (`builtins`, root namespace, ...)
 
 ```nix
@@ -379,6 +441,52 @@ with import <nixpkgs> {};
 ```console
  ❤ (uwu) ~> nix-build ./test.nix
  ❤ (uwu) ~>
+```
+
+---
+
+## Standalone builders
+
+* `with` statement might seem like magic here
+* The same can be achieved with a let
+
+```nix
+let
+  nixpkgs = import <nixpkgs> {};
+in
+  {
+    example = nixpkgs.pkgs.hello;
+  }
+```
+
+Quiz: what are the `{}` for after the import?
+
+---
+
+## Quiz answer (nixpkgs import)
+
+* `<nixpkgs>` retrieves a path from the `$NIX_PATH` set
+* `import <PATH>` loads and parses whatever is there
+* `{}` is an empty attribute set passed as a functional parameter
+  * This set can be used to override default `nixpkgs` behaviour
+
+---
+
+## Random tangent
+
+* When running `nix repl <nixpkgs>` you are telling nix what to load
+* Running `nix repl`, you load _nothing_.  This is great to get a feel
+  for the structure of `nixpkgs`
+  
+```consol
+ ❤ (uwu) ~> nix repl
+Welcome to Nix version 2.3.7. Type :? for help.
+
+nix-repl> <nixpkgs>
+/run/current-system/libkookie/nixpkgs
+
+nix-repl> import <nixpkgs>
+«lambda @ /run/current-system/libkookie/nixpkgs/pkgs/top-level/impure.nix:15:1»
 ```
 
 ---
@@ -420,34 +528,55 @@ a set
 
 ## Tangent: derivations
 
-```
- ❤ (uwu) ~> cat /nix/store/2imxf5r8flrps8yw3zds5jffzp37n3a5-foo.drv
+Derivations contain build instructions for a package
 
-Derive([("out","/nix/store/xxvfx1n970cijvajqgbgwnpcw7iyxipl-foo","","")],
-[("/nix/store/3f9cg7nra2vh0wpa0x7gd0cc51aywxmm-stdenv-linux.drv",["out"]),
-("/nix/store/5f008h6hhrdf64752j3wxwhmm3xspzcq-bash-4.4-p23.drv",["out"])],
-["/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"],
-"x86_64-linux",
-"/nix/store/k8p54jg8ipvnfz435mayf5bnqhw4qqap-bash-4.4-p23/bin/bash",
-["-e","/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"],
-[("buildInputs",""),("builder","/nix/store/k8p54jg8ipvnfz435mayf5bnqhw4qqap-bash-4.4-p23/bin/bash"),
-("configureFlags",""),("depsBuildBuild",""),("depsBuildBuildPropagated",""),
-("depsBuildTarget",""),("depsBuildTargetPropagated",""),("depsHostHost",""),
-("depsHostHostPropagated",""),("depsTargetTarget",""),("depsTargetTargetPropagated",""),
-("doCheck",""),("doInstallCheck",""),("name","foo"),("nativeBuildInputs",""),
-("out","/nix/store/xxvfx1n970cijvajqgbgwnpcw7iyxipl-foo"),("outputs","out"),("patches",""),
-("propagatedBuildInputs",""),("propagatedNativeBuildInputs",""),
-("stdenv","/nix/store/q1zjp9grl4w92qalkdqjs2bj5d0pf8ih-stdenv-linux"),
-("strictDeps",""),("system","x86_64-linux")])
+![](introduction/01-derivation.png)
+
+---
+
+## Our first package
+
+* Derivations have fields to change every aspect of the build process
+* In this case we use `nativeBuildInputs` and `installPhase`
+* Because the slides use a `Makefile`, the build step can be
+  automatically inferred
+
+```nix
+nativeBuildInputs = with pkgs; [ gnumake pandoc ];
+installPhase = ''
+  mkdir $out
+  cp -rv * $out
+'';
 ```
 
 ---
 
+## Our first package
 
+* `$out` is a special environment variable during build step
+  * points to the derivation output directory
+  * try adding `echo $out` or `ls -la $out` into the `installPhase` block
+* `nativeBuildInputs` specifies _build time_ dependencies
 
-  buildInputs = with pkgs; [ gnumake pandoc ];
+---
 
+## Our first package
+
+When we put it all together, this derivation generates a `result`
+symlink, which contains the built slide deck!
+
+```nix
+with import <nixpkgs> {};
+stdenv.mkDerivation {
+  name = "nix-course";
+  src = ./.;
+
+  nativeBuildInputs = with pkgs; [ gnumake pandoc ];
   installPhase = ''
     mkdir $out
     cp -rv * $out
   '';
+}
+```
+
+
