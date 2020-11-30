@@ -387,6 +387,8 @@ nix-repl> fb { a = "a"; b = "b"; }
 
 ## Destructuring "operator"
 
+`f = { a, b }: [ a b ]`
+
 ```nix
 nix-repl> f { a = "a"; }
 error: function at (...) called without required argument 'b'
@@ -474,7 +476,7 @@ Quiz: what are the `{}` for after the import?
 
 ## Random tangent
 
-* When running `nix repl <nixpkgs>` you are telling nix what to load
+* When running `nix repl '<nixpkgs>'` you are telling nix what to load
 * Running `nix repl`, you load _nothing_.  This is great to get a feel
   for the structure of `nixpkgs`
   
@@ -536,7 +538,8 @@ Derivations contain build instructions for a package
 
 ## Our first package
 
-* Derivations have fields to change every aspect of the build process
+* Derivations have fields to change (almost) every aspect of the build
+  process
 * In this case we use `nativeBuildInputs` and `installPhase`
 * Because the slides use a `Makefile`, the build step can be
   automatically inferred
@@ -579,4 +582,71 @@ stdenv.mkDerivation {
 }
 ```
 
+---
 
+## And voilá, your first package
+
+You might say...
+
+> but *kookie*, that's not very reproducible?!
+
+
+# Reproducible builds
+
+---
+
+## Impure source
+
+* Setting `src` to `./.` means, local files are used
+* OK for development, but "local files" can change
+* Inputs aren't _really_ pinned
+  * nix will re-build your program when it has to
+  * but builds can randomly break in a deployment
+  * ... that's bad!
+  
+<br/>
+  
+What's a better solution?
+
+
+---
+
+## Option 1: fixed output derivation
+
+* **Warning:** _sort of_ depricated (?) (nixpkgs `#2270`)
+* **Warning:** they are pretty bad!
+
+</br>
+
+* Build a derivation as normal
+* Compare the build artefact hash against a fixed provided hash
+
+TODO: add smallest example of a FOD that's not `fetchurl`
+
+---
+
+## Option 2: fetch sources from elsewhere
+
+// this section is only notes atm!
+
+* Under the hood does the same thing as FOD
+* Think about nix as an abstraction onion
+  * You can use the unsafe, weird stuff somewhere
+  * Don't let it polute the rest of your build steps
+  * Rust's `unsafe` is very similar in this regard!
+  
+---
+
+## Putting this together
+
+```nix
+stdenv.mkDerivation rec {
+  name = "nix-workshop";
+  src = pkgs.fetchurl {
+    url = "https://data.spacekookie.de/slides/nix-workshop";
+    sha256 = lib.fakeSha256;
+  };
+  
+  # ...
+}
+```
