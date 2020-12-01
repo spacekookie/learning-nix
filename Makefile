@@ -2,11 +2,11 @@ IMAGES_FOLDER ?= $(INPUT_FOLDER)/images
 INPUT_FOLDER ?= $(shell pwd)
 OUTPUT_FOLDER ?= $(shell pwd)/dist
 
-intro:
-	@pandoc introduction/nix-intro.md \
+%.html: */%.md
+	@pandoc $< \
 	--from markdown+tex_math_single_backslash \
 	--to revealjs \
-	--output nix-intro.html \
+	--output $@  \
 	--template template/index.html \
 	-V revealjs-url=template \
 	-V theme=white \
@@ -14,3 +14,6 @@ intro:
 	-V slideNumber=true \
 	-V history=true \
 	--standalone --slide-level 2
+
+.PHONY: build
+build: nix-intro.html nix-modules.html

@@ -1,6 +1,6 @@
 ---
-title: Nix!
-subtitle: Na das kann ja nix werden
+title: Nix
+subtitle: A small primer on nix and packaging
 ---
 
 # Overview
@@ -468,7 +468,7 @@ Quiz: what are the `{}` for after the import?
 ## Quiz answer (nixpkgs import)
 
 * `<nixpkgs>` retrieves a path from the `$NIX_PATH` set
-* `import <PATH>` loads and parses whatever is there
+* `import PATH` loads and parses whatever is there
 * `{}` is an empty attribute set passed as a functional parameter
   * This set can be used to override default `nixpkgs` behaviour
 
@@ -606,47 +606,112 @@ You might say...
   
 <br/>
   
-What's a better solution?
-
+Problem: nix builders can't access the network!
 
 ---
 
-## Option 1: fixed output derivation
+## Fixed output derivations
 
-* **Warning:** _sort of_ depricated (?) (nixpkgs `#2270`)
-* **Warning:** they are pretty bad!
+* **Warning:** _sort of_ deprecated (?) (nixpkgs `#2270`)
+* **Warning:** they are a frequent foot gun
 
 </br>
 
-* Build a derivation as normal
-* Compare the build artefact hash against a fixed provided hash
-
-TODO: add smallest example of a FOD that's not `fetchurl`
+* Are allowed to access the network
+* Build a derivation as it normally would
+* Compare the build output hash against a fixed hash
 
 ---
 
-## Option 2: fetch sources from elsewhere
+## Fixed output derivations
 
-// this section is only notes atm!
-
-* Under the hood does the same thing as FOD
-* Think about nix as an abstraction onion
-  * You can use the unsafe, weird stuff somewhere
-  * Don't let it polute the rest of your build steps
-  * Rust's `unsafe` is very similar in this regard!
-  
----
-
-## Putting this together
+* Provide a hash algorithm and mode (recursive is used for a directory)
+* You can use `lib.fakeSha256` if you don't _know_ the output hash
+  when writing your code
 
 ```nix
-stdenv.mkDerivation rec {
-  name = "nix-workshop";
+{ 
+  # ...
+  outputHashAlgo = "sha256";
+  outputHashMode = "recursive";
+  outputHash = lib.fakeSha256;
+}
+```
+
+---
+
+## Fixed output derivations
+
+* The derivation will fail if the output hash doesn't match the
+  provided expectation
+
+```
+hash mismatch in fixed-output derivation '/nix/store/436kql2xd5acg3xkrdbgz3lzzmrazrfi-test-derivation':
+  wanted: sha256:0000000000000000000000000000000000000000000000000000
+  got:    sha256:0clr01hmi9hy6nidvr2wzh8k13acsx8vd25jhy48hxgnjkxw6kap
+error: build of '/nix/store/mr6pk4af05xa5h9mihi85qzif1yp8l6a-test-derivation.drv' failed
+```
+
+Quiz: what side-effect can this have?
+
+---
+
+## Quiz: Caching
+
+`pkgs.fetchurl` is a fixed output derivation!
+
+```nix
+{
   src = pkgs.fetchurl {
-    url = "https://data.spacekookie.de/slides/nix-workshop";
-    sha256 = lib.fakeSha256;
+    url = "https://git.spacekookie.de/cool-app/latest.tar.gz";
+    sha256 = "a6f758eac134474e16c2189cea716f365a8f148b6b096ca54955c6f7fdc6f48b";
   };
   
   # ...
 }
 ```
+
+What happens if `latest.tar.gz` changes?
+
+---
+
+## Quiz: Caching
+
+* In nix *inputs* are hashed
+* Derivations are addressed via their inputs
+* This means that a FOD may be built once, and then never changes again!
+* In future runs, the cached tarball is used
+* No updates are applied.
+
+**Even worse**: a build can break, and you'll never notice!
+
+---
+
+## Fetching from the internet
+
+Provide a version that will change whenever updating!
+
+```nix
+stdenv.mkDerivation rec {
+  name = "cool-app";
+  version = "0.5.0";
+  src = pkgs.fetchurl {
+    url = "https://git.spacekookie.de/${name}/releases/${version}.tar.gz";
+    sha256 = lib.fakeSha256;
+  };
+}
+```
+
+---
+
+## Fetching from the internet
+
+* It's okay to use fixed output derivations in places
+* Make sure you understand the drawbacks
+* Think about Nix as an abstraction onion
+  * You can use the unsafe, weird stuff somewhere
+  * Don't let it polute the rest of your build steps
+  * Rust's `unsafe` is very similar in this regard!
+
+
+# Questions?
