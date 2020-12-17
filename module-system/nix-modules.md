@@ -7,23 +7,51 @@ subtitle: A deep(ish) dive into the nix module system
 
 ---
 
-## Configuring a system
+## Overview
 
-* What aspects to system configuration are there?
-* How do "legacy systems" handle this?
-* How does nix handle this?
-
----
-
-## Files are functions
-
-* Explain the `{ ... }:` header in files
+* A module in Nix is a function with a specific API
+  * `options`: nested set of all options declarations
+  * `config`: nested set of all option values
+  * `lib` and `pkgs` to access utilities
+* The modules are also split into `options` and `config`
 
 ---
 
-## Simple examples
+## Modules are functions
 
-* Setting up a systemd service
+* `{ config, lib, ... }:` is a deconstructed function header
+* Loading happens via `imports` attribute set key
+
+```nix
+{ ... }:
+
+{
+  imports = [ ./part1.nix ./part2.nix ];
+}
+```
+
+---
+
+## Using modules
+
+* Creating system configuration is done by setting module options
+
+```nix
+{ config, lib, pkgs, ... }:
+{ 
+  # ...
+  systemd.services.helloService = {
+    enable = true;
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = ''
+        ${pkgs.hello}/bin/hello -g "Hello, nyantec"
+      '';
+      Type = "oneshot";
+    };
+  };
+}
+```
 
 
 # Writing modules
