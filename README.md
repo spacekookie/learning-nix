@@ -49,4 +49,4 @@ course.
 | [`nix-modules`]  | Outline of how the NixOS module system works, how to write custom modules, and how to use all this for basic system configuration |
 
 [`introduction`]: ./introduction/
-[`nix-modules`]: ./nix-modules
+[`nix-modules`]: ./module-system/

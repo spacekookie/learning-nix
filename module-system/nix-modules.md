@@ -19,7 +19,7 @@ subtitle: A deep(ish) dive into the nix module system
 
 ## Modules are functions
 
-* `{ config, lib, ... }:` is a deconstructed function header
+* `{ config, lib, ... }:` is a deconstructed function argument
 * Loading happens via `imports` attribute set key
 
 ```nix
@@ -53,5 +53,81 @@ subtitle: A deep(ish) dive into the nix module system
 }
 ```
 
+---
+
+**Find modules**: [https://search.nixos.org/options](https://search.nixos.org/options)
+
+![](module-system/module-railcar.png)
+
 
 # Writing modules
+
+---
+
+## Short recap
+
+* Everything in nix is an attribute set
+  * `{ a = "foobar"; b = { ... }; }`
+* Module system uses some "magic keys"
+  * `imports`, `options`, `config`
+* Modules are parsed into two nested sets
+
+Putting all this together we can write our first module!
+
+---
+
+## Writing modules
+
+```nix
+{ config, lib, pkgs, ... }: 
+
+{
+  options.hello = {
+    enable = lib.mkEnableOption "hello service";
+  };
+  
+  config = lib.mkIf config.hello.enable {
+    systemd.services.helloService = { ... };
+  };
+}
+```
+
+---
+
+## Using `hello` module
+
+After we include the module (more on that later) the
+`services.hello.enable` key is available to us!
+
+```nix
+{ ... }: 
+{
+  # ...
+  
+  imports = [ ./hello-module.nix ];
+  services.hello.enable = true;
+}
+```
+
+---
+
+## Module options with types
+
+* Just having a single enable switch is maybe somewhat pointless
+* Module system type system provided by `lib.types`
+
+```nix
+{ lib, ... }:
+
+{
+  options.hello = {
+    greeting = lib.mkOption {
+      type = lib.types.str;
+      default = "Hello, nyantec!";
+      description = "Exact greeting to print out";
+    };
+  };
+  
+  # ...
+}
+```
