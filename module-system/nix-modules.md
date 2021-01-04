@@ -9,49 +9,178 @@ subtitle: A deep(ish) dive into the nix module system
 
 ## Overview
 
-* A module in Nix is a function with a specific API
-  * `options`: nested set of all options declarations
-  * `config`: nested set of all option values
-  * `lib` and `pkgs` to access utilities
-* The modules are also split into `options` and `config`
+* Modules are implemented via the Nix runtime
+* Don't _need_ to configure NixOS
+* Fundamentally: functions with a specific API
 
 ---
 
-## Modules are functions
+## Nix module API
 
-* `{ config, lib, ... }:` is a deconstructed function argument
-* Loading happens via `imports` attribute set key
+* Modules take an attribute set
+  * `options`: nested set of all options declarations
+  * `config`: nested set of all option values
+  * `lib`, `pkgs`, ... to access utilities
+* Modules return an attribute set
+  * Three special keys: `options`, `config`, `imports`
+
+---
+
+## Module anatomy
+
+* Function parameters are usually destructured
+* Return an attribute set
+* Nix runtime will fold attribute sets together
+
 
 ```nix
-{ ... }:
+{ config, lib, ... }:
 
 {
-  imports = [ ./part1.nix ./part2.nix ];
+  imports =  [ ./special.nix ];
+    
+  config.environment.enableDebugInfo = true;
 }
 ```
 
 ---
 
-## Using modules
+## Module anatomy (!)
 
-* Creating system configuration is done by setting module options
+* Modules that don't provide option declarations can implicitly
+  declare `config`.
+* Example: `/etc/nixos/configuration.nix`
 
 ```nix
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
+
+{
+  imports = [ ./special.nix ];
+  environment.enableDebugInfo = true;
+}
+```
+
+---
+
+## Quiz: attrset merging
+
+The Nix runtime is responsible for merging attribute sets into a
+coherent configuration.
+
+What attribut set is the result?
+
+```nix
+{ ... }: { imports = [ ./a.nix ./b.nix ]; }
+```
+
+```nix
+# a.nix
+{ ... }: { config.services.nginx.enable = true; }
+```
+
+```nix
+# b.nix
+{ ... }: { services.nginx = { user = "www"; group = "uwu"; }; }
+```
+
+---
+
+## Quiz answer (merging)
+
+
+```
 { 
-  # ...
+  config = {
+    services = {
+      nginx = {
+        enable = true;
+        user = "www";
+        group = "uwu";
+      };
+    };
+  };
+  
+  options = {};
+}
+```
+
+# Using modules
+
+---
+
+## Module sources
+
+* NixOS comes with some modules (`nixpkgs/nixos`)
+* Alternative sets exist (e.g. `home-manager`)
+
+<br/>
+
+* A module configures some aspect of a system.
+* A module can use other modules.
+
+---
+
+## Example: systemd unit
+
+This configuration uses the systemd nixos module to create a complete
+service unit.
+
+```nix
+{ config, pkgs, ... }:
+{
   systemd.services.helloService = {
     enable = true;
-    wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       ExecStart = ''
-        ${pkgs.hello}/bin/hello -g "Hello, nyantec"
+        ${pkgs.hello}/bin/hello -g "Hello, nyantec!"
       '';
       Type = "oneshot";
     };
   };
 }
 ```
+
+---
+
+## Example: user management
+
+This configuration creates a user with ssh access.
+
+The NixOS `users` module also ensures that users are created, and
+retired (uid remains in-use!) when configuration is removed.
+
+```nix
+{ config, ... }:
+{
+  services.openssh.enable = true;
+  users.users.alice = { createHome = true; isNormalUser = true;
+    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOSOwKTQavB5TovmD85RMBw8to5+tfSXfzSAwZXcp+Yg" ];
+  };
+}
+```
+
+---
+
+## Debugging configuration
+
+* Build a NixOS VM from your configuration
+
+```nix
+# base.nix: Most minimal system configuration
+{ ... }: {
+  fileSystems."/".device = "/dev/fake";
+  boot.loader.grub.device = "/dev/fake";
+}
+```
+
+Build and run a qemu VM:
+
+```console
+$ nix build -f '<nixpkgs/nixos>' vm -I nixos-config=base.nix
+$ result/bin/run-nixos-vm
+# qemu goes brrr
+```
+
 
 ---
 
@@ -67,10 +196,8 @@ subtitle: A deep(ish) dive into the nix module system
 ## Short recap
 
 * Everything in nix is an attribute set
-  * `{ a = "foobar"; b = { ... }; }`
 * Module system uses some "magic keys"
-  * `imports`, `options`, `config`
-* Modules are parsed into two nested sets
+* Modules are parsed, and merged into one big attrset
 
 Putting all this together we can write our first module!
 
@@ -78,56 +205,246 @@ Putting all this together we can write our first module!
 
 ## Writing modules
 
+* Build an API via options
+* Provide implementation via `config`
+* Use `lib.mkIf` to gate inclusion of the configuration based on an
+  `enable` attribute.
+
 ```nix
 { config, lib, pkgs, ... }: 
 
 {
-  options.hello = {
-    enable = lib.mkEnableOption "hello service";
-  };
+  options.services.hello.enable = lib.mkEnableOption "hello service";
   
-  config = lib.mkIf config.hello.enable {
-    systemd.services.helloService = { ... };
+  config = lib.mkIf config.services.hello.enable {
+    systemd.services.helloService = { /* the config from earlier */ };
   };
 }
 ```
 
 ---
 
-## Using `hello` module
+## Including modules
 
-After we include the module (more on that later) the
-`services.hello.enable` key is available to us!
+* Use `imports` key to include new module definitions
+* You can use a `NIX_PATH` key to make paths shorter
 
 ```nix
 { ... }: 
-{
-  # ...
-  
-  imports = [ ./hello-module.nix ];
-  services.hello.enable = true;
-}
+{ imports = [ <modules/hello.nix> ];
+  services.hello.enable = true; }
+```
+
+Don't forget to modify your build command
+
+```console
+$ ls
+my-modules main.nix
+$ nix build -f '<nixpkgs/nixos>' vm \
+    -I modules=my-modules -I nixos-conf=main.nix
 ```
 
 ---
 
-## Module options with types
+## Adding option types
 
-* Just having a single enable switch is maybe somewhat pointless
-* Module system type system provided by `lib.types`
+* Module type system provided via `lib.types`
+* Allows Nix to type-check your configuration
+* `builtins` provides some type converters
 
 ```nix
-{ lib, ... }:
-
-{
-  options.hello = {
+{ lib, ... }: {
+  options.services.hello = {
     greeting = lib.mkOption {
       type = lib.types.str;
       default = "Hello, nyantec!";
-      description = "Exact greeting to print out";
+      description = "The greeting to pass to hello(1)";
     };
   };
   
   # ...
 }
 ```
+
+---
+
+## Converting types
+
+* Nix can't "coerce" types
+  * No implicit type conversion
+* Use builtins such as `builtins.toString` to change types explicitly
+
+```
+nix-repl> port = 1312
+nix-repl> "${port}"
+error: cannot coerce an integer to a string, at (string):1:2
+
+nix-repl> "${toString port}"
+"1312"
+```
+
+
+# Submodules
+
+---
+
+## Submodules
+
+* Many NixOS options rely on submodule types
+* Looking at the `railcar` virt module as an example
+
+```nix
+{ pkgs, ... }:
+{
+  services.railcar = {
+    containers."test-container" = {
+      cmd = "${pkgs.hello}/bin/hello";
+    };
+  };
+}
+```
+
+* `containers` is an attrset of submodules
+  * Defines available (and required!) options
+
+---
+
+## Submodule type
+
+* You _can_ take a random attribute set as an option
+  * No documentation, and no type-checking!
+* Instead, use `lib.types.submodule`
+
+```nix
+{ lib, ... }:
+{
+  options.services.hello = {
+    enable = lib.mkEnableOption "hello service";
+    greeter = lib.mkOption {
+      type = lib.types.submodule {
+        options = {
+          msg = lib.mkOption { type = lib.types.str; };
+          pkg = lib.mkOption { type = lib.types.package; };
+        }; };
+    };
+  };
+}
+```
+
+---
+
+## Submodule type
+
+Using this submodule is no different from using other top-level
+options
+
+```nix
+{ pkgs, ... }:
+{
+  # ...
+  
+  services.hello = {
+    enable = true;
+    greeter = {
+      msg = "Hello, nyantec!";
+      pkg = pkgs.hello;
+    };
+  };
+}
+```
+
+---
+
+## The `listOf` type
+
+* Sometimes you may want a list of structured attribut sets
+* This is how `users.users`,`nginx.virtualHosts`, or
+  `railcar.containers` is implemented
+  
+```nix
+{ lib, ... }:
+with lib; # incule lib to cut down on boilerplate
+{ options.services.hello.greeters = {
+    type = with types; listOf (submodule {
+      options = {
+        msg = lib.mkOption { type = lib.types.
+        pkg = lib.mkOption { type = lib.types.package; };
+      };
+    });
+    description = "Set of greeters to print messages for";
+  };
+}
+```
+
+---
+
+## The `listOf` type
+
+```nix
+{ pkgs, ... }:
+let pkg = pkgs.hello;
+in
+{
+  # ...
+  services.hello.greeters = [
+    { msg = "Hello, nyantec"; inherit pkg; }
+    { msg = "Hello, world!"; inherit pkg; }
+  ];
+}
+```
+
+---
+
+## The `attrsOf` type
+
+* A core component of many complex modules is `attrsOf submodule`
+* Take attribute set with keys, and values that are specific submodules
+
+```nix
+{ lib, ... }:
+with lib; {
+  options.services.hello.greeters = {
+    type = with types; attrsOf (submodule {
+      options = { /* ... */ };
+    });
+  };
+}
+```
+
+## The `attrsOf` type
+
+* Declare attribut options as usual
+
+```nix
+{ ... }:
+{
+  # ...
+  
+  services.hello = {
+    enable = true;
+    greeters = {
+      nyantec = { msg = "Hello, nyantec!"; };
+      world = { msg = "Hello, world!"; };
+    };
+  }
+}
+```
+
+## The `attrsOf` type
+
+* Module implementation needs to map attributes to desired values
+
+```
+{ config, lib, ... }:
+let generateUnit = (name: cfg: /* ... */);
+in
+{
+  options.services.hello = { /* ... */ };
+  
+  config = lib.mkIf config.services.hello.enable {
+    systemd.services = (lib.mapAttrs' (name: cfg: 
+      lib.nameValuePair "hello-service-${name}" (generateUnit name cfg)));
+  };
+}
+```
+
