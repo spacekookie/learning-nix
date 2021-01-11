@@ -10,7 +10,8 @@ subtitle: A deep(ish) dive into the nix module system
 ## Overview
 
 * Modules are implemented via the Nix runtime
-* Don't _need_ to configure NixOS
+* Configuration for _some_ system
+  * Not tried to NixOS specifically
 * Fundamentally: functions with a specific API
 
 ---
@@ -47,7 +48,7 @@ subtitle: A deep(ish) dive into the nix module system
 
 ## Module anatomy (!)
 
-* Modules that don't provide option declarations can implicitly
+* Modules that don't provide optionnnn declarations can implicitly
   declare `config`.
 * Example: `/etc/nixos/configuration.nix`
 
@@ -284,7 +285,7 @@ nix-repl> "${toString port}"
 ```
 
 
-# Submodules
+# Advanced types
 
 ---
 
@@ -448,3 +449,47 @@ in
 }
 ```
 
+
+# Custom module library
+
+---
+
+## Module library setup
+
+* A module library is a set of files that provide module options
+* Create an `all-modules.nix` that itself includes all submodules
+  * In nixpkgs: `nixos/module/all-modules.nix`
+
+---
+
+## Namespaces and options
+
+* Nix does not enforce namespaces for files
+* Define your own policy and schema for creating modules
+
+An example from my lib, libkookie:
+
+```
+libkookie.base = { /* ... */ };
+libkookie.server = { /* ... */ };
+libkookie.ui = { /* ... */ };
+```
+
+---
+
+## Use `$NIX_PATH` for paths
+
+* Don't rely on relative paths between configuration and module
+  declaration
+
+```console
+#> nixos-rebuild switch -I mymodules=/path/to/config/mymodules ...
+```
+
+```nix
+{
+  imports = [ <mymodules/server/all-modules.nix> ];
+}
+```
+
+# Questions?
