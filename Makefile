@@ -16,4 +16,4 @@ OUTPUT_FOLDER ?= $(shell pwd)/dist
 	--standalone --slide-level 2
 
 .PHONY: build
-build: nix-intro.html nix-modules.html
+build: nix-intro.html nix-modules.html advanced.html
