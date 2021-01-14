@@ -74,8 +74,6 @@ $ nix build -f . hello # if pwd is a nixpkgs checkout
 * 2.0 are sometimes more convenient
   * Lack manpages and good documentation
 
----
-
 # Overlays & overrides
 
 ---
@@ -101,7 +99,7 @@ self: super: {
 * Following graph from [nixos.wiki](https://nixos.wiki/wiki/Overlays)
 * I find it a bit confusing so following is a breakdown
 
-![](./overlays.png)
+![](advanced-concepts/overlays1.png)
 
 ---
 
@@ -159,4 +157,79 @@ self: super: {
 
 ---
 
+## Overlay packages
 
+* Putting this together, let's override htop
+
+```console
+$ tree patches
+patches/
+└── htop
+    ├── 0001-htop-untruncated-username.patch
+    └── default.nix
+```
+
+```nix
+self: super: {
+  htop = self.callPackage ./patches/htop { inherit (super) htop; };
+}
+```
+
+---
+
+## Overlay packages
+
+* Don't define a new package, override parts of the existing one
+* Include as many other dependencies as you need
+* Then include patches, or change build steps
+
+```nix
+{ htop }:
+htop.overrideAttrs ({ patches ? [], ... }: {
+  patches = patches ++ [ ./0001-htop-untruncated-username.patch ];
+})
+```
+
+---
+
+## Including overlays
+
+Two ways, depending on your setup
+
+---
+
+### `nixpkgs-overlays` key in `$NIX_PATH`
+
+* Required to make `nix-shell` use overlay
+* Means the overlay needs to stick around at runtime
+  * --> breaks if you move it!
+
+---
+
+### Custom `default.nix` root
+
+* Instead of loading `<nixpkgs>` directly, load your `default.nix`
+* Then load `nixpkgs` and include the overlay
+* Doesn't make `nix-shell` work!
+
+```nix
+{ overlays ? [], ... } @ args:
+
+import <nixpkgs> (args // {
+  overlays = overlays ++ [ (import ./overlay) ];
+})
+```
+
+```console
+$ nix build -f . htop
+... # builds overlay htop
+```
+
+# Secrets 🤫
+
+---
+
+## Secrets and `/nix/store`
+
+* All files in `/nix/store` are world readable
+  * Not a great place to keep secrets & tokens
