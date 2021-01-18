@@ -43,11 +43,11 @@ $
 
 ---
 
-### Specify `<nixpkgs>` path
+### Specify `nixpkgs` path
 
 <br/>
 
-**1.0 nix-build**: Take `$NIX_PATH` key as first parameter
+**1.0 nix-build**: Specify path via first parameter
 
 ```console
 $ nix-build '<nixpkgs>' -A hello
@@ -233,3 +233,82 @@ $ nix build -f . htop
 
 * All files in `/nix/store` are world readable
   * Not a great place to keep secrets & tokens
+* Simple work-around: use strings for paths
+  * Keep secrets in privileged folder in `/var/lib`
+  * Reference via `"/var/lib/foo/secret"`
+
+---
+
+## Manual secrets
+
+This is not ideal!
+
+* If you move the secrets your deployment/ installation breaks!
+* Files are still in plain-text: root exploit can read them out
+
+---
+
+## Overriding activation script
+
+* Store secrets in your build files encrypted
+* Rely on activation-time decryption by authorised user
+
+```nix
+{ pkgs, ... }:
+{
+  system.activationScripts.setup-secrets = {
+    text = ''
+      ${pkgs.gnupg}/bin/gpg --decrypt ${./foo.gpg} > /var/lib/foo/secret
+      # ... set the correct owner, etc
+    '';
+    deps = [];
+  };
+}
+```
+
+---
+
+## Alternative: systemd units
+
+* Activation scripts are complex and **must not** fail!
+  * Generates one very long shell script
+* If something fails, activation is in an undefined state
+
+Instead: use systemd units! (You already know how!)
+
+```nix
+{ pkgs, ... }:
+{
+  systemd.services.foo-secrets = {
+    wantedBy = [ "foo.service" ];
+    serviceConfig.user = "foo-user"; # No need to chown manually!
+    script = ''
+      ${pkgs.gnupg}/bin/gpg --decript ${./foo.gpg} > /var/lib/foo/secret
+    '';
+  };
+}
+```
+
+# Extending system builds
+
+---
+
+## Extending system builds
+
+* You can use `system.extraSystemBuilderCmds` to execute some code
+  when building a system configuration
+* For example: copy your configuration directory to the nix-store
+
+```nix
+{ ... }:
+{
+  system.extraSystemBuilderCmds = 
+  let cfgDir = ../..;
+  in
+  ''
+    ln -s ${lib.cleanSource cfgDir} $out/nix-config
+  '';
+}
+```
+
+# Questions?
