@@ -43,10 +43,13 @@ This course is designed to roughly take up a full day of teaching
 audience, and available time you may want to split this into a two day
 course.
 
-| Component        | Details                                                                                                                           |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| [`introduction`] | Outline the basics of what nix is, why it exists, and how it works                                                                |
-| [`nix-modules`]  | Outline of how the NixOS module system works, how to write custom modules, and how to use all this for basic system configuration |
+| Component             | Details                                                                                                                           |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| [`introduction`]      | Outline the basics of what nix is, why it exists, and how it works                                                                |
+| [`nix-modules`]       | Outline of how the NixOS module system works, how to write custom modules, and how to use all this for basic system configuration |
+| [`advanced-concepts`] | A set of short explorations of more advanced principles, in package building, module usage, and the Nix tools themselves          |
+
 
 [`introduction`]: ./introduction/
 [`nix-modules`]: ./module-system/
+[`advanced-concepts`]: ./advanced-concepts/
