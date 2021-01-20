@@ -225,6 +225,15 @@ $ nix build -f . htop
 ... # builds overlay htop
 ```
 
+---
+
+## Public overlays
+
+* You can include third-party overlays
+  * https://github.com/mozilla/nixpkgs-mozilla
+  * https://github.com/nix-community/emacs-overlay
+  * https://github.com/plapadoo/gdx-nixos-overlay
+
 # Secrets 🤫
 
 ---
@@ -241,10 +250,10 @@ $ nix build -f . htop
 
 ## Manual secrets
 
-This is not ideal!
-
+* This is not ideal!
 * If you move the secrets your deployment/ installation breaks!
-* Files are still in plain-text: root exploit can read them out
+* Deploying on a new machine depends on some state!
+* Plain-text secrets in backups -> bad?
 
 ---
 
@@ -454,5 +463,147 @@ The RFC was somewhat controvertial.
 * There is an initial experimentation in `nix` 2.0 CLI.
 * But this design could change quite fundamentally until the next RFC.
 
+
+# Code formatting
+
+---
+
+## Code formatting
+
+* No unified style guide
+* `nixpkgs` uses various styles
+* Several fmt-tools available
+* Try to be consistant about it?  (having a style guide per-project/
+  per-organisation can help)
+
+Following are some common patterns from nixpkgs.
+
+---
+
+## Attrset formatting
+
+* Usually not split across multiple lines.
+* Alphabetical or "priority" ordering
+* Put commas first to line up entries
+
+```nix
+{ lib, stdenv, pkgs, ... }:
+```
+
+```nix
+{ mkDerivation, lib, stdenv, makeWrapper, fetchurl, cmake, extra-cmake-modules
+, karchive, kconfig, kwidgetsaddons, kcompletion, kcoreaddons
+, kguiaddons, ki18n, kitemmodels, kitemviews, kwindowsystem
+, kio, kcrash
+, boost, libraw, fftw, eigen, exiv2, libheif, lcms2, gsl, openexr, giflib
+, openjpeg, opencolorio, vc, poppler, curl, ilmbase
+, qtmultimedia, qtx11extras, quazip
+, python3Packages
+}:
+```
+
+---
+
+## List formatting
+
+* Some lists are broken per-item, some are not
+
+```nix
+buildInputs = [
+  kcompletion kconfigwidgets kcrash kdbusaddons kdesignerplugin ki18n
+  kiconthemes kio kwindowsystem qttools
+];
+```
+
+```nix
+buildInputs = [
+  breeze-icons
+  breeze-qt5
+  kconfig
+  kcrash
+  kdbusaddons
+  kfilemetadata
+  kguiaddons
+  ki18n
+  kiconthemes
+  kinit
+  knotifications
+  knewstuff
+  karchive
+  knotifyconfig
+  kplotting
+  ktextwidgets
+  mlt
+  phonon-backend-gstreamer
+  qtdeclarative
+  qtmultimedia
+  qtquickcontrols2
+  qtscript
+  shared-mime-info
+  libv4l
+  ffmpeg-full
+  frei0r
+  rttr
+  kpurpose
+  kdeclarative
+  wrapGAppsHook
+];
+```
+
+---
+
+## Module patterns
+
+* When creating a module, alias the local option scope in a let
+
+```nix
+{ config, lib, ... }:
+
+let cfg = config.foo.bar.my-module;
+in
+with lib;
+{
+  options.foo.bar.my-module = {
+    # ...
+  };
+  
+  config = mkIf cfg.enable {
+    # ...
+  };
+}
+```
+
+---
+
+## Module patterns
+
+* If your configuration block is too complex, move it to a different file
+
+```nix
+{ config, lib, ... } @ args:
+
+with lib;
+{
+  options.foo.bar.my-module = {
+    # ...
+  };
+  
+  config = (import ./config.nix args);
+}
+```
+
+---
+
+## Code formatters
+
+* Personally I don't use them
+* None of them are official
+
+* [https://github.com/nix-community/nixpkgs-fmt](https://github.com/nix-community/nixpkgs-fmt)
+  * Written in Rust
+  * Aims to bring consistency to nixpkgs
+* [https://github.com/serokell/nixfmt](https://github.com/serokell/nixfmt)
+  * Written in Haskell
+  * Adjust the formatting to input style
 
 # Questions?

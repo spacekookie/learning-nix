@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 {
   fileSystems."/".device = "/dev/fake";
   boot.loader.grub.device = "/dev/fake";

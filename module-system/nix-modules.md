@@ -227,6 +227,61 @@ $ result/bin/run-nixos-vm
 ![](module-system/module-railcar.png)
 
 
+# Exercise: nginx
+
+---
+
+## Exercise: nginx
+
+Learning-by-doing is better than learning-by-being-told.
+
+* Use qemu VM and map ports to access network
+  * nix build -f \'\<nixpkgs/nixos>\' vm \
+          -I nixos-config=nginx.nix
+  * env QEMU_NET_OPTS=\"hostfwd=tcp::8080-:80\" result/bin/run-nixos-vm
+
+```nix
+{ ... }:
+{
+  services.nginx = {
+    # ...
+  };
+}
+```
+
+---
+
+## Exercise: nginx
+
+* `nginx` module does not open firewall!
+  * `networking.firewall.allowedTCPPorts`
+* Create a virtualHost and set `default` on it
+* Build an `index.html` and include the directory as a location
+
+Remember to use the module search if you get stuck!
+
+---
+
+## Solution
+
+```nix
+{ ... }:
+{
+  networking.firewall.allowedTCPPorts = [ 80 ];
+  
+  services.nginx = {
+    enable = true;
+    virtualHosts."main" = {
+      default = true;
+      locations."/" = {
+        root = ./.;
+      };
+    };
+  };
+}
+```
+
+
 # Writing modules
 
 ---

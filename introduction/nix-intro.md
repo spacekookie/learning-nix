@@ -866,9 +866,34 @@ $ nix-build . -A railcar
   * More flexible packaging guidelines
   
 * Many many others
-  * https://github.com/mozilla/nixpkgs-mozilla
   * https://github.com/triton/triton
   * https://github.com/DavidEGrayson/nixcrpkgs
-  * https://github.com/telent/nixwrt/
+  * https://github.com/telent/nixwrt
+
+# Distribution channels
+
+---
+
+## Distribution channels
+
+* **NixOS release** every 6 months (xx.03 & xx.09)
+  * Soon to be xx.05 & xx.11 (RFC 0080)
+  * Conservative (+ security) updates for 1 year
+* **NixOS unstable**
+  * Rolling release
+  * Moved from master every time main CI passes
+  * Not all packages verified: can result in system breakage
+
+---
+
+## Large/ small
+
+You get to choose the speed/ frequency of updates.
+
+* Large channels build a binary cache for all packages
+  * May take longer to update
+* Small channels only include core set in binary cache
+  * Faster update
+  * You need to build more things from source
 
 # Questions?
