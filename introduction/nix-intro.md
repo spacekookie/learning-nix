@@ -54,8 +54,8 @@ This system works in layers!
 
 1. Your configuration sets a value (`users.spacekookie.homeDir = "/home";`)
 2. `users` module provides options, and evaluates settings
-3. Impure layer: Run `useradd ...`, conditionally based on whether
-   that user already exists, etc.
+3. Impure layer: (for example) run `useradd ...`, conditionally based
+   on whether that user already exists, etc.
 
 ---
 
@@ -375,7 +375,7 @@ nix-repl> let
 * Additional keys are ignored via `...` operator
 
 ```nix
-nix-repl> fa = attr: [ attr.a attr.b ]
+nix-repl> fa = attrs: [ attrs.a attrs.b ]
 nix-repl> fb = { a, b }: [ a b ]
 nix-repl> fa { a = "a"; b = "b"; }
 [ "a" "b" ]
@@ -413,6 +413,21 @@ nix-repl> f { a = "a"; c = "c"; }
 [ "a" null ]
 ```
 
+---
+
+## Extra: destructuring `@`
+
+* If you want to destructure _and_ not destructure
+* Use the `@` operator to reference a whole attribute set
+  * `{ a, b, c } @ foo`: `a` and `foo.a` are the same
+  * Used to pass full attribut set through to another function
+  
+
+```
+nix-repl> f = { a, b, ... } @ attrs: [ a b attrs.c ]
+nix-repl> f { a = "a"; b = "b"; c = 5; }
+```
+
 # Building software
 
 ---
@@ -434,7 +449,6 @@ nix-repl> f { a = "a"; c = "c"; }
 
 ```nix
 with import <nixpkgs> {};
-
 {
   # ...
 }
@@ -445,32 +459,50 @@ with import <nixpkgs> {};
  ❤ (uwu) ~>
 ```
 
----
-
-## Standalone builders
-
-* `with` statement might seem like magic here
-* The same can be achieved with a let
-
-```nix
-let
-  nixpkgs = import <nixpkgs> {};
-in
-  {
-    example = nixpkgs.pkgs.hello;
-  }
-```
-
 Quiz: what are the `{}` for after the import?
 
 ---
 
 ## Quiz answer (nixpkgs import)
 
-* `<nixpkgs>` retrieves a path from the `$NIX_PATH` set
-* `import PATH` loads and parses whatever is there
-* `{}` is an empty attribute set passed as a functional parameter
-  * This set can be used to override default `nixpkgs` behaviour
+* `{}` is an attribute set passed as a function parameter
+* Loading `import <nixpkgs>` returns a function
+* Attribute set used to customise nixpkgs initialisation
+
+```
+nix-repl> import <nixpkgs>
+«lambda @ /run/current-system/libkookie/nixpkgs/pkgs/top-level/impure.nix:15:1»
+
+nix-repl> import <nixpkgs> {}
+{ AAAAAASomeThingsFailToEvaluate = «error: Please be informed that this pseudo-package is not the only part of
+Nixpkgs that fails to evaluate. You should not evaluate entire Nixpkgs
+without some special measures to handle failing packages, like those taken
+by Hydra.
+...
+```
+
+---
+
+## Standalone builders
+
+* Top-level attribute set can contain build targets
+* Unless otherwise specified, all targets will be built
+
+```nix
+with import <nixpkgs> {};
+{
+  hello = nixpkgs.pkgs.hello;
+  prosody = nixpkgs.pkgs.prosody;
+}
+```
+
+```console
+$ nix-build test.nix
+/nix/store/v5sv61sszx301i0x6xysaqzla09nksnd-hello-2.10
+/nix/store/azgd3si63ajfpycyhkdv3wn08mgfib22-prosody-0.11.7
+$ nix-build test.nix -A hello
+/nix/store/v5sv61sszx301i0x6xysaqzla09nksnd-hello-2.10
+```
 
 ---
 
@@ -500,7 +532,7 @@ Let's look at the `default.nix` building these slides!
 ```nix
 with import <nixpkgs> {};
 stdenv.mkDerivation {
-  name = "nix-workshop";
+  name = "nix-course";
   src = ./.;
   # ...
 }
@@ -652,6 +684,24 @@ hash mismatch in fixed-output derivation '/nix/store/436kql2xd5acg3xkrdbgz3lzzmr
 error: build of '/nix/store/mr6pk4af05xa5h9mihi85qzif1yp8l6a-test-derivation.drv' failed
 ```
 
+We replace `lib.fakeSha256` with given hash.
+
+---
+
+## Fixed output derivations
+
+```
+{
+  # ...
+  outputHash = "0clr01hmi9hy6nidvr2wzh8k13acsx8vd25jhy48hxgnjkxw6kap";
+}
+```
+
+```console
+$ nix-build fixed-output-test.nix
+/nix/store/ha2h8w38p0p89fba5wfw0kzl3f26pkf9-fixed-output
+```
+
 Quiz: what side-effect can this have?
 
 ---
@@ -661,9 +711,10 @@ Quiz: what side-effect can this have?
 `pkgs.fetchurl` is a fixed output derivation!
 
 ```nix
-{
+stdenv.mkDerivation rec {
+  name = "cool-app";
   src = pkgs.fetchurl {
-    url = "https://git.spacekookie.de/cool-app/latest.tar.gz";
+    url = "https://git.spacekookie.de/${name}/latest.tar.gz";
     sha256 = "a6f758eac134474e16c2189cea716f365a8f148b6b096ca54955c6f7fdc6f48b";
   };
   
@@ -713,5 +764,111 @@ stdenv.mkDerivation rec {
   * Don't let it polute the rest of your build steps
   * Rust's `unsafe` is very similar in this regard!
 
+# Packaging for NixOS
+
+---
+
+## Packaging in `nixpkgs`
+
+* So far we have only considered stand-alone builders
+* How to include packages in `nixpkgs`?
+
+```
+$ pwd
+/home/projects/nixpkgs
+$ pseudo-tree pkgs
+pkgs/
+├── applications
+├── build-support
+├── games
+├── ...
+└── top-level
+    ├── all-packages.nix
+    └── ...
+```
+
+---
+
+## Packaging in `nixpkgs`
+
+* `top-level` contains package collections
+  * For example: `emacs-packages`
+  * Use special loaders and builders
+  * Some packages are auto-generated (for example `pkgs.emacsPackages`
+    pulls in MELPA every once in a while)
+
+```nix
+{ lib, ... }: 
+{
+  foo = ...;
+  bar = ...;
+}
+```
+
+---
+
+## Including a new package
+
+* Edit `pkgs/top-level/*.nix` (usually `all-packages`)
+* Use `pkgs.callPackage` to include new package
+
+```nix
+{ lib, conig, overlays, ... }:
+with pkgs;
+{
+  # ...
+
+  cool-app = callPackage ../tools/misc/cool-app { };
+
+  # ...
+}
+```
+
+---
+
+## `callPackage` magic
+
+* Figure out what inputs a package derivation has
+* Use reflection on function inputs
+  * `callPackageWith` implemented in `lib/customisation.nix`
+
+```nix
+{ lib, fetchFromGitHub, rustPlatform, libseccomp }:
+
+rustPlatform.buildRustPackage rec {
+  pname = "railcar";
+  version = "1.0.4";
+  src = fetchFromGitHub { /* ... */ };
+  # ...
+}
+```
+
+---
+
+## Add package to `all-packages`
+
+* File sorted alphabetically (sort of)
+* This makes it available to other packages or modules (or your system)
+
+```console
+$ pwd
+/home/projects/nixpkgs
+$ nix-build . -A railcar
+/nix/store/hnad1l25aps8x3p37r8501cn6317k31d-railcar-1.0.4
+```
+
+---
+
+## Alternative package sets
+
+* Nix User Repository
+  * https://github.com/nix-community/NUR
+  * More flexible packaging guidelines
+  
+* Many many others
+  * https://github.com/mozilla/nixpkgs-mozilla
+  * https://github.com/triton/triton
+  * https://github.com/DavidEGrayson/nixcrpkgs
+  * https://github.com/telent/nixwrt/
 
 # Questions?

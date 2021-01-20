@@ -48,7 +48,7 @@ subtitle: A deep(ish) dive into the nix module system
 
 ## Module anatomy (!)
 
-* Modules that don't provide optionnnn declarations can implicitly
+* Modules that don't provide option declarations can implicitly
   declare `config`.
 * Example: `/etc/nixos/configuration.nix`
 
@@ -143,6 +143,27 @@ service unit.
 
 ---
 
+## Example: systemd unit
+
+* Use a deploy mechanism to activate this configuration
+  * `sudo nixos-rebuild switch`
+  * `nix build -f '<nixpkgs/nixos>' system` && `result/bin/switch-to-configuration switch`
+
+```console
+$ sudo systemd status helloService.service
+● helloService.service
+     Loaded: loaded (/nix/store/.../helloService.service)
+     Active: inactive (dead)
+$ sudo journalctl -u helloService.service
+-- Logs begin at Sat 2020-10-24 16:54:30 CEST, end at Tue 2021-01-19 15:37:37 CET. --
+Jan 19 15:36:38 uwu systemd[1]: Starting helloService.service...
+Jan 19 15:36:38 uwu hello[1302]: Hello, nyantec!
+Jan 19 15:36:38 uwu systemd[1]: helloService.service: Succeeded.
+Jan 19 15:36:38 uwu systemd[1]: Finished helloService.service.
+```
+
+---
+
 ## Example: user management
 
 This configuration creates a user with ssh access.
@@ -158,6 +179,22 @@ retired (uid remains in-use!) when configuration is removed.
     openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOSOwKTQavB5TovmD85RMBw8to5+tfSXfzSAwZXcp+Yg" ];
   };
 }
+```
+
+---
+
+## Example: user management
+
+* Build with `nix build -f '<nixpkgs/nixos>' system`
+* Check result link for outputs
+* When activating the configuration `etc` link is replaced on the
+  system with the new version
+
+```console
+$ ls result/etc/ssh/authorized_keys.d/
+jane jane.mode jane.gid jane.uid
+$ cat result/etc/ssh/authorized_keys.d/jane
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOSOwKTQavB5TovmD85RMBw8to5+tfSXfzSAwZXcp+Yg
 ```
 
 ---
