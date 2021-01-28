@@ -56,7 +56,8 @@ in your workflow?  Already using Nix and want to get new employees up
 to speed?  Remote and on-site trainings available! [contact
 me](mailto:kookie@spacekookie.de).
 
-This workshop material was created for, and sponsored by [Nyantec]!
+This workshop material was created for, and sponsored by
+[Nyantec](https://nyantec.com)!
 
 
 ## License
