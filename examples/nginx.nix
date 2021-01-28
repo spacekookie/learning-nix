@@ -8,7 +8,7 @@
     virtualHosts."main" = {
       default = true;
       locations."/" = {
-        root = ./.;
+        root = ./website;
       };
     };
   };

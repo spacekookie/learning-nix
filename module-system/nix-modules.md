@@ -274,7 +274,7 @@ Remember to use the module search if you get stuck!
     virtualHosts."main" = {
       default = true;
       locations."/" = {
-        root = ./.;
+        root = ./website;
       };
     };
   };
