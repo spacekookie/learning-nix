@@ -4,7 +4,7 @@
 </div>
 
 This repository contains workshop material intended to teach the
-[`nix`] ecosystem.  That includes: `nix` the tool, `Nix` the language,
+[Nix](https://nixos.org) ecosystem.  That includes: `nix` the tool, `Nix` the language,
 and `NixOS` the distribution.
 
 
