@@ -1,0 +1,216 @@
+#+Title: How does Nix do it?
+#+SETUPFILE: ../../reveal.setup
+
+** Implementation details
+
+\\
+
+   + Declarative
+   + Reproducible
+   + Functional
+   + Pure
+   + Lazy
+
+** Declarative vs Imperative
+
+\\
+
+   Tell the computer _what_ to do,
+
+   #+BEGIN_SRC nix
+     users.spacekookie.homeDir = "/home";
+   #+END_SRC
+
+   not _how_ to do it
+   
+   #+BEGIN_SRC console
+     # useradd spacekookie -d /home
+   #+END_SRC
+
+** Declarative onion
+
+\\
+
+   This system works in layers!
+
+   1. Your configuration sets a value (~users.spacekookie.homeDir = "/home";~)
+   2. ~users~ module provides options, and evaluates settings
+   3. Impure layer: (e.g.) run ~useradd ...~, conditionally based on
+      whether that user already exists in passwd file, etc
+
+** Reproducible
+
+\\
+
+   + Nix configuration changes are idempotent
+
+     #+BEGIN_SRC nix
+       users.spacekookie = {
+         createHome = true;
+         homeDir = "/home";
+         extraGroups = [ "wheel" "dialout" ];
+       };
+     #+END_SRC
+
+** Reproducible
+
+\\
+
+   + The same build inputs yield the same build outputs
+     + Build *inputs* are hashed, and can be re-used if already present
+   + If build inputs _may_ change, build sare fixed by their output
+     hash (more on that later)
+
+     
+** Reproducible
+
+\\
+
+   #+BEGIN_SRC 
+     build-01-set = [ 9gkyl3knyalavd5v77rb0ciwry1r4v77-foo
+                      gm1vihrf3d8hks2fgjfgfyn5wm2rs49a-bar ]
+
+     build-02-set = [ 9gkyl3knyalavd5v77rb0ciwry1r4v77-foo
+                      psfi2l3kqpsp2zv66ngnaqhxnbzx1dn7-bar ]
+   #+END_SRC
+
+   Because the hash of the ~foo~ input is the same, it can be re-used
+   from the store.  The ~bar~ package was updated, and thus needs to
+   be rebuilt!
+
+*** Tangent: the nix store
+
+\\
+
+   + Usually located at ~/nix/store~
+   + Special permission setup
+     + Owned by ~root:nixbld~
+     + Write permission on ~/nix/store~ for owner and group
+     + No write permissions for actual outputs (e.g. ~/nix/store/<hash>-foo/~)
+     + Additional ~t~ bit on ~/nix/store~, which means that removing a
+       file requires write-permission on the file, not just the
+       containing directory.
+
+*** Tangent: the nix store
+
+\\
+
+   #+BEGIN_SRC console
+     $ /n/s/zzg015adjliwmdm4jfkbhnkpw6dmq1ym-urxvt-autocomplete-all-the-things-1.6.0> tree -p                                                                                   
+     .
+     └── [dr-xr-xr-x]  lib
+         └── [dr-xr-xr-x]  urxvt
+             └── [dr-xr-xr-x]  perl
+                 └── [-r-xr-xr-x]  autocomplete-ALL-the-things
+     
+     3 directories, 1 file
+   #+END_SRC
+
+   The result of all this?
+
+   A ~nixbld~ user can create a new directory and store build outputs,
+   but _never remove_ or _change them_ again!  Build artifacts are
+   read-only!
+   
+** Pure
+
+\\
+
+   + Functions have no side-effects
+   + Inputs map directly to outputs
+
+   #+BEGIN_SRC nix
+     let
+       makeYouUnderstand = (rickAstley {
+         giveYouUp = "never";  letYouDown = "never";
+         runAround = "never";  desertYou = "never";
+         makeyouCry = "never"; sayGoodbye = "never";
+       });
+     in
+     { }
+   #+END_SRC
+
+** Functional
+
+\\
+
+   (no it doesn't mean "it works")
+
+   + Functions are first-class types in the Nix language
+   + Functions can be...
+     + passed as parameters
+     + returned as results
+
+   Syntax is Haskell inspired:
+
+   #+BEGIN_SRC nix
+     let cube = (x: y: z: x * y * z)
+     in
+     (cube 2 4 8)
+   #+END_SRC
+
+** Lazy
+
+\\
+
+   Expressions are only evaluated when they are needed for the result
+   of an operation.
+
+   #+BEGIN_SRC nix
+     {
+       never = abort "<oh-no.jpg>";
+       use = "I'm a String";
+     }.use
+   #+END_SRC
+
+** Why?!
+
+\\
+
+   As in: why go through all this trouble
+
+** Unique names for every package
+
+#+REVEAL_SLIDE_BACKGROUND: ./imgs/deps.png
+
+\\
+
+   + Dependency closures solve a lot of problems
+   + Closures only work in a pure environment
+   + Pure environments demand certain design principles (functional,
+     lazy, reproducible)
+
+** Closures
+
+\\
+
+   We'll get into the specifics but there are two scenarios that
+   closures can cover.
+
+   Two _rules_ if you will...
+
+** Rule #1
+
+\\
+
+   | I'm building some software, and I don't know the exact hash of what I will be producing! |
+
+\\
+   
+   + You can do arbitrary computation
+   + Produce _arbitrary outputs_
+   + The build _can not_ access the network!
+
+** Rule #2
+
+\\
+
+   | I'm fetching a source archive.  I know exactly what I will produce, so give me network access!
+
+\\
+
+   + Only run once: will not be built again after the source is fetched
+   + Arbitrary computation is still possible, but bulider _can not_ produce arbitrary outputs
+   + The exact hash of this build must be known ahead of time
+
+** [[file:README.org][Back to index]]

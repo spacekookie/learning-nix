@@ -1,0 +1,220 @@
+#+Title: Overlays & Flakes
+#+Subtitle: Easy ways to override nixpkgs
+#+SETUPFILE: ../../reveal.setup
+
+** Problem!
+
+\\
+
+   I want to override a package in nixpkgs, and ship this override to
+   other developers or users.
+
+   How?
+
+** Overlays!
+
+\\
+
+   + Provide package changes
+   + "Overlayed" onto an existing package source (e.g. ~nixpkgs~)
+   + Allow for local, or organisation-wide overrides
+   + Implemented as a function
+
+   #+BEGIN_SRC nix
+     self: super: {
+       htop = self.callPackage ./patches/htop { inherit (super) htop; };
+     }
+   #+END_SRC
+
+** Overlay structure
+
+\\
+
+
+   file:imgs/overlays1.png
+
+** Situation: no overlays
+
+\\
+   (enjoy some drawings from my eInk tablet)
+
+   file:imgs/overlays2.png
+
+** Situation: one overlay
+
+\\
+
+   file:imgs/overlays3.png
+
+** Situation: two overlays
+
+\\
+
+   file:imgs/overlays4.png
+
+** Package overrides
+
+\\
+
+   You _can_ override packagse without an overlay, for example in-line
+   to your configuration!
+
+   #+BEGIN_SRC nix
+     { pkgs, ... }:
+     {
+       environment.systemPackages = [
+         (pkgs.git.override {
+           svnSupport = true;
+           sendEmailSupport = true;
+         })
+       ];
+     }
+   #+END_SRC
+
+** ~override~ vs ~overrideAttrs~
+
+\\
+
+   + ~override~ overrides attributes _in_ a derivation
+   + ~overrideAttrs~ overrides attributes passed _to_ ~mkDerivation~
+
+** 
+
+   Let's put it all together and override htop!
+
+   #+BEGIN_SRC console
+     $ tree patches
+     patches/
+     └── htop
+         ├── 0001-htop-untruncated-username.patch
+         └── default.nix     
+   #+END_SRC
+
+   #+BEGIN_SRC nix
+     self: super: {
+       htop = self.callPackage ./patches/htop { inherit (super) htop; };
+     }     
+   #+END_SRC
+
+** 
+
+   + Don't define a new package, override parts of the existing one
+   + Include as many other depedencies as you need
+   + Then include patches, or change build steps
+
+   #+BEGIN_SRC nix
+     { htop }:
+     htop.overrideAtts ({ patches ? [], ... }: {
+       patches = patches ++ [ ./0001-htop-untruncated-username.patch ];
+     })
+   #+END_SRC
+
+** How do you use an Overlay?
+
+** ~nixpkgs-overlays~ PATH key
+
+\\
+
+   + Required to make ~nix-shell~ use the overlay
+   + Means the overlay needs to stick around at runtime
+     + and _things break_ if you move/ delete it!
+
+\\
+
+   #+BEGIN_SRC bash
+     export NIX_PATH="$NIX_PATH:nixpkgs-overlays=/path/to/overlay"
+   #+END_SRC
+
+** Custom ~default.nix~ root
+
+\\
+
+   + Instead of loading ~<nixpkgs>~ directly, load your own
+     ~default.nix~
+   + Then load ~<nixpkgs>~ and attach the ovelay
+   + This doesn't make ~nix-shell~ work though :(
+
+   #+BEGIN_SRC nix
+     { overlays ? [], ... } @ args:
+     import <nixpkgs> (args // {
+       overlays = overlays ++ [ (import ./overlay) ];
+     });
+   #+END_SRC
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~> nix build -f . htop
+     ... build the patched htop ...
+   #+END_SRC
+
+** Pinning sources 📌
+
+\\
+
+   How do you currently manage your ~<nixpkgs>~ dependency?
+
+   + ~nix-channel~ :: nixpkgs may change at any time
+   + Local nixpkgs checkout :: more or less convenient.  If you are
+     going down this route I recommend a git-submodule or git-subtree
+   + Flakes :: The hot new shit that everyone is talking about
+
+** Flakes
+
+\\
+
+   Flakes allow you to specify your Nix dependencies in a declarative
+   way.
+
+   #+BEGIN_SRC nix
+     # flake.nix
+     {
+       inputs = {
+         home-manager.url = "github:nix-community/home-manager";
+       };
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~> nix flake lock --update-input home-manager
+   #+END_SRC
+
+** Flakes schema
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       inputs = {
+         # github example, also supported gitlab:
+         nixpkgs.url = "github:Mic92/nixpkgs/master";
+         # git urls
+         git-example.url = "git+https://git.somehost.tld/user/path";
+         # local directories (for absolute paths you can omit 'path:')
+         directory-example.url = "path:/path/to/repo";
+         # Use this for non-flakes
+         bar.url = "github:foo/bar/branch";
+         bar.flake = false;
+         # Overwrite inputs in a flake
+         # This is useful to use the same nixpkgs version in both flakes
+         sops-nix.url = "github:Mic92/sops-nix";
+         sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+         # Pin flakes to a specific revision
+         nix-doom-emacs.url = "github:vlaci/nix-doom-emacs?rev=238b18d7b2c8239f676358634bfb32693d3706f3";
+         nix-doom-emacs.flake = false;
+         # To use a subdirectory of a repo, pass dir=
+         nixpkgs.url = "github:foo/bar?dir=shu";
+       }
+     }
+   #+END_SRC
+
+** ⚠️ Flakes are experimental
+
+\\
+
+   + Flakes are still being developed
+     + https://github.com/NixOS/rfcs/pull/49 (initial RFC which didn't land)
+     + Work ongoing behind ~--experimental-features flake~ argument
+     + More RFCS: RFC#123, RFC#105, probably more to come :)
+   + https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#flake-references
+   + I don't use flakes, so I can't give you a lot of insight on it
+
+** [[file:README.org][Back to index]]

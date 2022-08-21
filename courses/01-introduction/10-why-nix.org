@@ -1,0 +1,73 @@
+#+Title: Why Nix?
+#+SETUPFILE: ../../reveal.setup
+
+** There are a lot of package managers
+
+\\
+
+   virtualenv brew poetry pyenv pipenv rbenv rvm docker npm yarn composer
+   cabal stack cargo rebar enot evm hex bower spago wasmer svm swivm
+   jdk_switcher docker vms update-alternatives chroot luarocks luadist
+   berrybrew ppm apt lein yum asdf ports winget chocolatey nvm pnpm
+   rustup nuget cake paket
+
+** How about system dependencies?
+
+\\
+
+   + Setup a build environment?
+   + Install depnedencies?
+   + Find and link against the _right_ version of a library
+
+** 
+
+   file:imgs/fix-ci.png
+
+** ... and that's just at dev time!
+
+** It gets even trickier at deploy time
+
+\\
+
+   /docker, ansible, chef, puppet, .../
+
+   
+** Software is hard
+
+\\
+
+   + Our deploy targets are varied and numerous
+   + No two systems are the same
+   + How to keep track of dependencies?
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~/smol> cat Cargo.lock | grep -F "[[package]]" | wc -l
+      263
+
+      ❤ (theia) ~/big> cat Cargo.lock | grep -F "[[package]]" | wc -l
+      418
+   #+END_SRC
+
+** What do we depend on?
+
+** Assorted other issues
+
+\\
+
+   + Distribution package managers can't package every library
+   + Libraries that /are/ packaged can easily go out of date
+   + Distribtion stability guarantees are not always great for
+     software development (and also misunderstood!)
+   + Package managers keep track of symbolic names
+
+** 
+
+   *Most package managers are failing us, and so are most build tools!*
+
+** 
+
+   Nix solves the fundamental problem of dependencies
+
+   file:imgs/deps.png
+
+** [[file:README.org][Back to index]]

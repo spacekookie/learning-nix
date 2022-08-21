@@ -1,0 +1,84 @@
+#+Title: Fixed Output Derivations
+#+SETUPFILE: ../../reveal.setup
+
+** 
+
+   The 2 builder "rules" imply that some derivations can't produce
+   arbitrary outputs.  How does that work?
+
+** Fixed Output Derivations
+
+\\
+
+   + Are allowed to access the network
+   + Do arbitrary computation, with a known output
+     + For example: download _and patch_ a source archive
+
+** Just a normal derivation...
+
+\\
+
+   + Any derivation can provide an output hash to turn into a ~FOD~
+
+   #+BEGIN_SRC nix
+     stdenv.mkDerivation {
+       # ...
+
+       outputHashAlgo = "sha256";
+       outputHashMode = "recursive";
+       outputHash = "0lwdl06lbpnaqqjk8ap9dsags3bzma30z17v0zc7spng1gz8m6xj";
+     }
+   #+END_SRC
+
+** ...with some caveats
+
+\\
+
+   The derivation will fail if the output hash doesn't match the
+   expectation.
+
+   #+BEGIN_SRC console
+     hash mismatch in fixed-output derivation '/nix/store/436kql2xd5acg3xkrdbgz3lzzmrazrfi-test-derivation':
+       wanted: sha256:0lwdl06lbpnaqqjk8ap9dsags3bzma30z17v0zc7spng1gz8m6xj
+       got:    sha256:0clr01hmi9hy6nidvr2wzh8k13acsx8vd25jhy48hxgnjkxw6kap
+     error: build of '/nix/store/mr6pk4af05xa5h9mihi85qzif1yp8l6a-test-derivation.drv' failed
+
+   #+END_SRC
+
+** Caching 👻
+
+\\
+
+   Fixed output builders are a common foot-gun!  Let's look at an
+   example.
+
+   #+BEGIN_SRC nix
+     stdenv.mkDerivation rec {
+       name = "tokei";
+       src = pkgs.fetchurl {
+         url = "https://github.com/XAMPPRocky/${name}/tarball/master";
+         sha256 = "sha256-K0bIHHBTo31slbSWW/ruM7iYzb8rwmmuVCUehqDzAZc=";
+       };
+  
+       # ...
+     }
+   #+END_SRC
+
+   What happens if `latest.tar.gz` changes?
+
+** Caching 🔥
+
+\\
+
+   Two issues can interact here:
+
+   1. Nix hashes _inputs_ and thus won't re-run the builder if an
+      output for it already exists in the nix store
+   2. Fixed output derivations are accessible via their _outputs_ too,
+      meaning that changing the input to the builder won't re-run it.
+
+   How would you re-run a fixed-output-derivation builder?
+
+** Change the hash!
+
+** [[file:README.org][Back to index]]

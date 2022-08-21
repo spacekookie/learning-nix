@@ -1,0 +1,36 @@
+# -*- mode: org; -*-
+
+This file contains common reveal.js export settings for org-mode.
+
+** Set some general options
+
+   I don't want a TOC or bullet numbering by default.  We have the
+   dedicated HTML pages as an index
+
+   #+Options: toc:nil num:nil
+   
+** Get reveal.js from a CDN
+
+   #+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+
+*** TODO Figure out why the local copy of reveal.js doesn't work!
+
+    For some reason we get an error (invalid type something something)
+    when using a local copy of reveal.js.  Investigate why!
+
+** General reveal.js options
+
+   Now come options that are very specific to reveal.js and the way it works.
+
+   #+REVEAL_INIT_OPTIONS: transition:'none', width:1200, height:800, margin: 0.1, minScale:0.2, maxScale:2.5, progress:false, hash:true
+   #+REVEAL_THEME: simple
+   
+   We also customise the title slide to have a link back to the ../README.org!
+   
+   #+REVEAL_TITLE_SLIDE: <h1>%t</h1> <p>%s</p> <br/> <a href="README.html">Back to index</a>
+
+   #+REVEAL_PLUGINS: highlight
+
+** Setup extra javascript
+
+   #+REVEAL_SLIDE_HEADER: <link rel="stylesheet" href="../../reveal-overrides.css"/>

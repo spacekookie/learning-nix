@@ -1,0 +1,304 @@
+#+Title: The Nix language
+#+SETUPFILE: ../../reveal.setup
+
+** Technical overview
+
+\\
+
+   + The Nix language is executed by the ~nix-daemon~
+   + ~nix-daemon~ is implemented in C++ and Nix
+   + ~nix-<command>~ is the set of old, deprecated CLIs
+   + ~nix <command>~ is the new, experimental CLI
+
+** Technical overview
+
+\\
+
+   + ~nixpkgs~ :: the nix standard library
+   + ~nixpkgs/lib~ :: generators and iterator tools
+   + ~nixpkgs/stdenv~ :: build environment utilities
+   + ~nixpkgs/pkgs~ :: main package tree
+   + ~nixpkgs/pkgs/build-support~ :: various build utilities (like
+     ~fetchFromGitHub~)
+
+** Types 1
+
+\\
+
+   + Attribute set (or "attrset") :: A map of keys and values of
+     arbitrary types.  Key = Value pairs must end with a ~;~.
+
+     ~{ a = 13; b = 12; c = 11; hello = true; }~
+
+   + Lists :: A list of arbitrary types.  Can contain mixed types.
+     Values are space-separated.
+
+     ~[ 13 12 11 "hello" true ]~
+
+** Types 2
+
+\\
+   
+   + Functions :: A function to call.  Can both be named
+     (~fetchFromGitHub~), or anonymous.
+
+     ~map (x: x * 2) [ 2 4 6 8 10 ]~
+
+   + Strings :: UTF-8 literals.
+
+     Two variants: inline (via ~"..."~) and block (via ~''...''~).
+     Block strings expand ~\n~.  Both strings support iterpolation
+     with ~${}~ (called "dollar-curly").
+
+** Types 3
+
+\\
+
+   + Integers (~5~, ~14~, ~42~)
+   + Doubles (~4.15151515~)
+   + Booleans (~true~ and ~false~)
+   + Paths (~/nix/store~ or ~./my-module~)
+   + Null (~null~)
+
+
+** Quiz: Semantic structure
+
+\\
+
+   The semantics of Nix is assignments all the way down.
+
+   #+BEGIN_SRC nix
+     {
+       package = pkgs.wine.override {
+         wineBuild = "wine64";
+         wineRelease = "staging";
+       };
+     }
+   #+END_SRC
+
+** Quiz: Semantic structure
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       package = pkgs.wine.override {
+         wineBuild = "wine64";
+         wineRelease = "staging";
+       };
+     }
+   #+END_SRC
+
+   + ~package =~ defines a key with something
+   + ~pkgs.wine.override { ... }~ is a function
+   + ~wineBuild~ and ~wineRelease~ are two keys in an attribute set,
+     passed to ~wine.override~
+
+** Let's meet the keywords
+
+** The ~let~ keyword
+
+\\
+
+   #+BEGIN_SRC nix
+     let wine = pkgs.wine.override {
+           wineBuild = "wine64";
+           wineRelease = "staging";
+         };
+     in {
+       package = wine;
+     }
+   #+END_SRC
+
+   + Pre-define a set of variables for a given scope
+   + There are no global variables, only scope-specific bindings
+
+** The ~inherit~ keyword
+
+\\
+
+   #+BEGIN_SRC nix
+     let package = pkgs.wine.override {
+           wineBuild = "wine64";
+           wineRelease = "staging";
+         };
+     in {
+       inherit package;
+     }
+   #+END_SRC
+   
+   + Take a value from one scope and copy it to another
+   + Essentially ~{ inherit foo }~ is the same as writing ~{ foo =
+     foo; }~.
+
+** The ~import~ keyword
+
+\\
+
+   + Not _technically_ a keyword but a ~builtin~
+   + Loads and parses the nix expression at the given path
+
+   #+BEGIN_SRC nix
+     # config.nix
+     { logging = "debug"; port = 8080; open = true; }
+   #+END_SRC
+
+\\
+   
+   #+BEGIN_SRC nix
+     # default.nix
+     { name = "my-application-service"; config = import ./config.nix; }
+   #+END_SRC
+
+** The ~with~ keyword
+
+\\
+
+   + Loads a scope into the following nix expression
+   + Makes all keys available
+   + Considered a little bit _controvertial_
+
+   #+BEGIN_SRC nix
+     with lib;
+     {
+       src = with pkgs; fetchFromGitHub {
+         owner = "spacekookie";
+         repo = "ddos";
+         sha256 = fakeSha256;
+       };
+     }
+   #+END_SRC
+
+** The ~rec~ keyword
+
+\\
+
+   #+BEGIN_SRC nix
+     nix-repl> { productRelease = currentYear - 8; currentYear = 2022; }.productRelease
+     error: undefined variable 'currentYear'
+       at «string»:1:20:
+
+            1| { productRelease = currentYear - 8; currentYear = 2022; }.productRelease
+             |                    ^
+   #+END_SRC
+
+   + By default attribute sets are not recursively self-referencial
+     (for performance reasons)
+   + To enable this, mark an attribute set with the ~rec~ keyword
+   + Alternatively you can usually always use a ~let ... in~ block
+
+** The ~rec~ keyword
+
+\\
+
+   #+BEGIN_SRC nix
+     nix-repl> rec { productRelease = currentYear - 8; currentYear = 2022; }.productRelease
+     2014
+   #+END_SRC
+
+** The destructuring "operator"
+
+\\
+
+   Let's look at a function which accepts an attribute set.
+
+   #+BEGIN_SRC nix
+     let
+       xySum = attrs: attrs.x + attrs.y;
+     in
+     xySum { x = 5; y = 7; }
+   #+END_SRC
+
+   + What happens when we call this function without an attribute set?
+     Or with missing values?
+
+*** Destructuring: calling with wrong parameters
+
+\\
+
+   What happens when we...
+
+   + pass the wrong type (~xySum 5~) :: ~error: value is an integer
+     while a set was expected~
+   + pass an incomplete set (~xySum { x = 5; }~) :: ~error: attribute
+     'y' missing~
+
+   Furthermore, writing ~attrs.<value>~ repeatedly will get annoying
+   quickly.
+
+*** Destructuring: basic declaration
+
+\\
+
+   Declare the function as accepting an attribute set, with a specific
+   set of keys.
+
+   #+BEGIN_SRC nix
+     let
+       xySum = { x, y }: x + y;
+     in
+     xySum { x = 5; y = 7; }
+   #+END_SRC
+
+*** Destructuring: some variations
+
+\\
+
+   There are some other options you have for making functions with
+   named parameters (i.e. which accept an attribute set) easier to
+   use.
+
+   + Allow additional parameters :: ~{ x, y, ... }: x + y~
+   + Assume defaults :: ~{ x, y ? 7 }: x + y~
+   + Bind the full set :: ~{ x, y ? 7 } @ set: otherFunction (x + y) set~
+   
+** The "diamond reference"
+
+\\
+
+   + Nix uses a lookup path for loading modules called ~NIX_PATH~
+   + Arbitrary keys and values can exist
+   + Values can be retrieved via the "diamond reference"
+
+   #+BEGIN_SRC console
+     nix-repl> <nixpkgs>
+     /home/sys
+     nix-repl> <modules>
+     /home/sys/modules
+   #+END_SRC
+
+** Combining and Merging
+
+\\
+
+   Sometimes you want to merge two attribute sets, or append one list
+   onto another!
+
+   + ~{ a = 13; b = 12; } // { c = 11; }~ :: results in ~{ a = 13; b = 12; c = 11; }~
+   + ~[ 13 12 ] ++ [ 11 ]~ :: results in ~[ 13 12 11 ]~
+
+** Putting it all together
+
+\\
+
+   Let's take the example builder from earlier.  Can we understand
+   what happens here?
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {};
+
+     let
+       myPython = pkgs.python3.withPackages (pypkgs:
+         with pypkgs; [ request flask prometheus_client pendulum ]);
+     in
+     stdenv.mkDerivation {
+       name = "prometheus-weather-gov";
+       src = ./.;
+
+       buildInputs = with pkgs.python3.pkgs; [
+         myPython mypy flake8 black
+       ];
+     }
+   #+END_SRC
+
+** [[file:README.org][Back to index]]

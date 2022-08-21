@@ -1,0 +1,29 @@
+#+Title: Exercise: building a package
+#+Subtitle: It means I get to take a break
+#+SETUPFILE: ../../reveal.setup
+
+** 
+
+   Create a stand-alone builder for a program.
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {};
+     ...
+   #+END_SRC
+
+   + https://github.com/thiderman/doge
+   + https://github.com/XAMPPRocky/tokei
+   + https://dev.yorhel.nl/ncdu
+
+** Some pointers
+
+\\
+
+   + Select the correct builders: ~mkDerivation~,
+     ~pythonPackages.buildPythonPackage~,
+     ~rustPlatform.buildRustPackage~, ...
+   + Use TOFU when fetching the source, set the hash and re-run
+   + You can define _environment variables_ in the derivation _(hint hint lol)
+   + Flail around with your arms until I come help you
+
+** [[file:README.org][Back to index]]

@@ -1,0 +1,271 @@
+#+Title: Nix for Development
+#+SETUPFILE: ../../reveal.setup
+
+** 
+
+   This slide deck will share some tips on how you can use Nix to your
+   advantage
+
+** Get a Nix build out-link
+
+\\
+
+   + 1.0 nix-build :: outputs build link when done
+
+     #+BEGIN_SRC console
+        ❤ (theia) ~> nix-build -A hello
+       these paths will be fetched (0.04 MiB download, 0.20 MiB unpacked):
+         /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+       copying path '/nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1' from 'https://cache.nixos.org'...
+       /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+     #+END_SRC
+
+   + 2.0 nix-build :: creates ~result~ symlink to output
+
+     #+BEGIN_SRC console
+        ❤ (theia) ~> nix build -f '<nixpkgs>' hello
+        ❤ (theia) ~> realpath result/
+       /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+     #+END_SRC
+
+** Specify ~nixpkgs~ path
+
+\\
+
+   + 1.0 nix-bulid :: Specify path via the first parameter
+
+     #+BEGIN_SRC console
+        ❤ (theia) ~> nix-build `<nixpkgs>' -A hello
+       ...
+        ❤ (theia) ~> nix-build custom-nixpkgs/ -A hello
+       ...
+     #+END_SRC
+
+   + 2.0 nix build :: Optional ~-f~ parameter
+
+     #+BEGIN_SRC console
+        ❤ (theia) ~> nix build -f '<nixpkgs>' hello
+       ...
+        ❤ (theia) ~> nix build -f custom-nixpkgs/ hello
+       ...
+     #+END_SRC
+
+** Enable experimental CLIs
+
+\\
+
+   The new, experimental CLIs were a bit _too_ openly available for a
+   while.  This has caused some controvercy and _reasonable Github
+   discussions_.
+
+   You now have to opt-into using them.
+
+   #+BEGIN_SRC conf
+     # ~/.config/nix/nix.conf
+     experimental-features = "nix-command flakes"
+   #+END_SRC
+
+** Keeping failed builds around
+
+\\
+
+   Sometimes it's useful to be able to inspect _why_ a build didn't
+   work, beyond the logs.  This is so far only supported by the _old
+   CLI_.
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build . -A ratman -K
+     this derivation will be built:
+       /nix/store/jh2h142g5ahaa6zf80xg2533m4fl32qj-ratman-0.4.0.drv
+     these 9 paths will be fetched (24.27 MiB download, 201.05 MiB unpacked):
+     [computer goes brrr]
+
+     [... some build error ...]
+     warning: build failed, waiting for other jobs to finish...
+     note: keeping build directory '/tmp/nix-build-ratman-0.4.0.drv-0'
+   #+END_SRC
+   
+** Code formatting
+
+\\
+
+   + No unified style guide
+   + ~nixpkgs~ uses many different styles, because it has many authors
+     and no central authority on these things (is that a good or a bad
+     thing?)
+   + Try to be consistent about it? 😅
+
+*** Nixpkgs formatting: attribute sets
+
+\\
+
+   + Usually they are not split across multiple lines
+   + Alphabetical or "priority" orderings
+   + Put commas first to line up entries if you must have multiple
+     lines
+
+   #+BEGIN_SRC nix
+     { lib, stdenv, pkgs, ... }:
+   #+END_SRC
+
+   #+BEGIN_SRC nix
+     { mkDerivation, lib, stdenv, makeWrapper, fetchurl, cmake, extra-cmake-modules
+     , karchive, kconfig, kwidgetsaddons, kcompletion, kcoreaddons
+     , kguiaddons, ki18n, kitemmodels, kitemviews, kwindowsystem
+     , kio, kcrash
+     , boost, libraw, fftw, eigen, exiv2, libheif, lcms2, gsl, openexr, giflib
+     , openjpeg, opencolorio, vc, poppler, curl, ilmbase
+     , qtmultimedia, qtx11extras, quazip
+     , python3Packages
+     }:
+   #+END_SRC
+   
+*** Nixpkgs formatting: lists
+
+\\
+
+   Some lists are broken per-item, some are not
+
+   #+BEGIN_SRC nix
+     buildInputs = [
+       kcompletion kconfigwidgets kcrash kdbusaddons kdesignerplugin ki18n
+       kiconthemes kio kwindowsystem qttools
+     ];
+   #+END_SRC
+
+   #+BEGIN_SRC nix
+     buildInputs = [
+       breeze-icons
+       breeze-qt5
+       kconfig
+       kcrash
+       kdbusaddons
+       kfilemetadata
+       kguiaddons
+       ki18n
+       kiconthemes
+       kinit
+       knotifications
+       knewstuff
+       karchive
+       knotifyconfig
+       kplotting
+       ktextwidgets
+       mlt
+       phonon-backend-gstreamer
+       qtdeclarative
+       qtmultimedia
+       qtquickcontrols2
+       qtscript
+       shared-mime-info
+       libv4l
+       ffmpeg-full
+       frei0r
+       rttr
+       kpurpose
+       kdeclarative
+       wrapGAppsHook
+     ];
+   #+END_SRC
+
+*** Code formatters
+
+\\
+
+   Finally, there are several code formatters.  I haven't so far used
+   any of them.  But they can be great if you want to enforce an
+   organisation-wide style.
+
+   + https://github.com/nix-community/nixpkgs-fmt
+     + Written in Rust
+     + Aims to create consistent styles without many options
+   + https://github.com/serokell/nixfmt
+     + Written in Haskell
+     + Highly configurable
+
+** Shell files
+
+\\
+
+   Avoid installing development tools globally.  Keep them in a shell
+   file.
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {};
+
+     stdenv.mkDerivation {
+       name = "my-project";
+       buildInputs = with pkgs; [
+         rustc cargo rust-analyzer rustfmt clangStdenv
+       ];
+     }
+   #+END_SRC
+
+   Then load this shell by simply running ~nix-shell~
+   
+** Direnv + Shell files
+
+\\
+
+   Automagically switch into an environment when you enter a directory
+   with direnv!
+
+   It even has native nix support
+
+   #+BEGIN_SRC 
+     # .envrc
+     use nix
+   #+END_SRC
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~/Projects> ls
+     vim-plugins/  world-domination/  README.md  cooking-app/
+      ❤ (theia) ~/Projects> cd cooking-app
+     direnv: loading ~/Projects/cooking-app/.envrc
+     direnv: using nix
+     direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL
+     +LD +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
+     +NIX_BUILD_CORES +NIX_BUILD_TOP +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
+     +NIX_CFLAGS_COMPILE +NIX_ENFORCE_NO_NATIVE +NIX_HARDENING_ENABLE
+     +NIX_INDENT_MAKE +NIX_LDFLAGS +NIX_STORE +NM +OBJCOPY +OBJDUMP +RANLIB
+     +READELF +SIZE +SOURCE_DATE_EPOCH +STRINGS +STRIP +TEMP +TEMPDIR +TMP
+     +TMPDIR +buildInputs +builder +cmakeFlags +configureFlags +depsBuildBuild +depsBuildBuildPropagated
+     +depsBuildTarget +depsBuildTargetPropagated +depsHostHost +depsHostHostPropagated
+     +depsTargetTarget +depsTargetTargetPropagated +doCheck +doInstallCheck +mesonFlags +name
+     +nativeBuildInputs +out +outputs +patches +propagatedBuildInputs +propagatedNativeBuildInputs
+     +shell +stdenv +strictDeps +system ~PATH ~XDG_DATA_DIRS
+   #+END_SRC
+   
+** Lorri + shell files
+
+\\
+
+   Lorri is an asynchronous Nix environment builder, written by Target
+   https://github.com/target/lorri
+
+   #+BEGIN_SRC envrc
+     eval "$(lorri direnv)"
+   #+END_SRC
+
+   #+BEGIN_SRC console
+     direnv: error /home/Projects/cooking-app/.envrc is blocked. Run `direnv allow` to approve its content
+      ❤ (theia) ~/P/cooking-app> direnv allow
+     direnv: loading ~/Projects/cooking-app/.envrc
+     direnv: export +AR +AS +CC +CONFIG_SHELL +CXX +HOST_PATH +IN_NIX_SHELL
+     +LD +NIX_BINTOOLS +NIX_BINTOOLS_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
+     +NIX_BUILD_CORES +NIX_BUILD_TOP +NIX_CC +NIX_CC_WRAPPER_TARGET_HOST_x86_64_unknown_linux_gnu
+     ....
+   #+END_SRC
+
+** Lorri + shell files
+
+\\
+
+   The advantage over directly letting direnv use nix is that lorri
+   won't block your shell while new packages are being downloaded or
+   things are compiling.
+
+   Integrations for lorri/ direnv/ etc exist for most text editors.
+
+
+** [[file:README.org][Back to +index+ Winnipeg]]

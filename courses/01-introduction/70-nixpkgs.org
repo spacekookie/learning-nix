@@ -1,0 +1,531 @@
+#+Title: Nixpkgs
+#+Subtitle: The Nix standard library
+#+SETUPFILE: ../../reveal.setup
+
+** What is nixpkgs?
+
+\\
+
+   + A collection of Nix utility functions, modules, and packages.
+   + Contains build-system abstractions to build packages
+   + Contains abstractions to build build-system abstractions
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~/P/nixpkgs> ls
+     CONTRIBUTING.md  default.nix  flake.nix  maintainers/  pkgs/
+     COPYING          doc/         lib/       nixos/        README.md
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~/P/nixpkgs> ls pkgs/
+    applications   common-updater  desktops  games  os-specific  servers
+    stdenv  tools  build-support   data      development  misc   pkgs-lib
+    shells  test   top-level
+   #+END_SRC
+
+\\
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~/P/nixpkgs> ls nixos/modules
+    config  hardware  i18n  installer  misc  module-list.nix  profiles
+    programs  rename.nix  security  services  system  tasks  testing
+    virtualisation
+   #+END_SRC
+
+** pkgs/top-level/all-packages.nix
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       # ...
+  
+       hdr-plus = callPackage ../applications/graphics/hdr-plus {
+       stdenv = clangStdenv;
+       };
+  
+       heimer = libsForQt5.callPackage ../applications/misc/heimer { };
+       hello = callPackage ../applications/misc/hello { };
+  
+       # ...
+     }     
+   #+END_SRC
+
+   Note: ~default.nix~ is loaded from directories automatically.
+
+** ~callPackage~ tangent
+
+\\
+
+   #+BEGIN_SRC nix
+     ncdu = callPackage ../tools/ncdu/default.nix { };
+   #+END_SRC
+
+   #+BEGIN_SRC nix
+     { lib, stdenv, fetchurl, zig, ncurses }:
+
+     stdenv.mkDerivation rec {
+       pname = "ncdu";
+       ...
+     }     
+   #+END_SRC
+
+   + Introspect what parameters a package requires
+   + Then call the package function with _only_ those parameters
+   + Implemented in ~lib/customisation.nix~ (if you're curious how it
+     works)
+
+** stdenv
+
+\\
+
+   A common build environment for packages
+
+   + gccStdenv 
+   + clangStdenv
+   + gcc10.stdenv
+   + gcc-arm-embedded.stdenv
+   + llvm-13.stdenv
+   + ...
+
+** Extending stdenv
+
+\\
+
+   #+BEGIN_SRC nix
+     { lib, stdenv, fetchurl }:
+     stdenv.mkDerivation rec {
+       pname = "hello";
+       version = "2.10";
+
+       src = fetchurl {
+         url = "mirror://gnu/hello/${pname}-${version}.tar.gz";
+         sha256 = "0ssi1wpaf7plaswqqjwigppsg5fyh99vdlb9kzl7c9lng89ndq1i";
+       };
+  
+       doCheck = true;
+  
+       # ...snip...
+     }     
+   #+END_SRC
+
+** 
+
+\\
+
+   | Pre             | Phase             | Post             |
+   |-----------------+-------------------+------------------|
+   | preUnpack       | unpackPhase       | postUnpack       |
+   | prePatch        | /patchPhase/      | postPatch        |
+   | preConfigure    | configurePhase    | postConfigure    |
+   | preBuild        | /buildPhase/      | postBuild        |
+   | preCheck        | checkPhase        | postCheck        |
+   | preInstall      | /installPhase/    | postInstall      |
+   | preFixup        | /fixupPhase/      | postFixup        |
+   | preInstallCheck | installCheckPhase | postInstallCheck |
+   | preDist         | distPhase         | postDist         |
+
+** Any phase can easily be extended
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       # ...
+
+       postPatch = ''
+         substituteInPlace alacritty/src/config/mouse.rs \
+           --replace "xdg-open" "${xdg_utils}/bin/xdg-open"
+       '';
+     }     
+   #+END_SRC
+
+** Any extra keys become ENV variables
+
+\\
+
+   #+BEGIN_SRC nix
+     stdenv.mkDerivation {
+       RUST_BACKTRACE = "1";
+  
+       # ...
+     }     
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC nix
+     buildGoPackage rec {
+       # ...
+
+       patches = [ ./0001-Disable-NIC-tests.patch ];
+  
+       configurePhase = ''
+         substituteInPlace agent/platform/platform_unix.go \
+         --replace '"lsb_release"' '"${lsb-release}/bin/lsb_release"'
+         echo "${version}" > VERSION
+       '';
+  
+       buildPhase = ''
+         make build-linux
+       '';
+  
+       installPhase = ''
+         mkdir -p $out/bin
+         mv bin/linux_*/* $out/bin/
+       '';
+     }
+  
+   #+END_SRC
+
+** Package sets
+
+** 
+
+\\
+
+   + Some collections of packages are treated as a `set`
+   + For example: any language specific package ecosystem
+
+   #+BEGIN_SRC nix
+     let
+       pythonDeps = with python3Packages; [ zeek zstd netio ];
+     in stdenv.mkDerivation {
+       name = "my-app";
+
+       buildInputs = [ pkgs.python3 ] ++ pythonDeps;
+
+       # ...
+     }     
+   #+END_SRC
+
+** Alternatively
+
+\\
+
+   #+BEGIN_SRC nix
+     let myPython = pkgs.python3.withPackages 
+       (pypkgs: with pypkgs; [
+         zeek zstd netio
+       ]);
+     in
+     stdenv.mkDerivation {
+       name = "my-app";
+  
+       buildInputs = [ myPython ];
+     }     
+   #+END_SRC
+
+** Package sets are everywhere
+
+\\
+
+   + ~python3Packages~ and ~python3.withPackages~
+   + ~rubyPackages~ and ~ruby.withPackages~
+   + ~emacsPackages~ and ~emacs.withPackages~
+   + ~haskellPackages~ (but no ~withPackages~)
+   + ~perlPackages~ and ~perl.withPackages~
+   + ...
+
+
+** How do these work?
+
+\\
+
+   #+BEGIN_SRC nix
+     let
+       pkgs = import <nixpkgs> { };
+     in
+       pkgs.python3.withPackages
+         (pypkgs: with pypkgs; [ zeek zstd netio ])     
+   #+END_SRC
+
+\\
+   
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build pkgs/specific-python.nix
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> tree result/ -L 2
+     result/
+     ├── bin
+     │   ├── 2to3
+     │   ├── 2to3-3.10
+     │   ├── bifcl -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/bifcl
+     │   ├── binpac -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/binpac
+     │   │   .........
+     │   ├── Netio
+     │   ├── normalizer
+     │   ├── paraglob-test -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/paraglob-test
+     │   ├── pydoc3.10
+     │   ├── python3.10
+     │   ├── zeek -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/zeek
+     │   ├── zeek-config -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/zeek-config
+     │   ├── zeek-cut -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/zeek-cut
+     │   └── zeek-wrapper -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/bin/zeek-wrapper
+     ├── include
+     │   ├── binpac -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/include/binpac
+     │   ├── broker -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/include/broker
+     │   ├── paraglob -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/include/paraglob
+     │   ├── python3.10 -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/include/python3.10
+     │   └── zeek -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/include/zeek
+     ├── lib
+     │   ├── libpython3.10.so -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/lib/libpython3.10.so
+     │   ├── libpython3.10.so.1.0 -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/lib/libpython3.10.so.1.0
+     │   ├── libpython3.so -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/lib/libpython3.so
+     │   ├── pkgconfig -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/lib/pkgconfig
+     │   └── python3.10
+     └── share
+         ├── btest -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/share/btest
+         ├── gdb -> /nix/store/9wa02q541sxq7372f8zv27rl57aribxj-python3-3.10.5/share/gdb
+         ├── man
+         └── zeek -> /nix/store/djbzvch3scq8y125247r0qkx95ynzxxq-zeek-4.2.2/share/zeek     
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> ls -l result/lib/python3.10/site-packages/
+     total 28
+     lrwxrwxrwx 1 root root  93 Jan  1  1970 broker -> /nix/store/b1rw2gbcjz5r6n0cm7jfy4gqbji11fqn-zeek-4.2.2-py/lib/python3.10/site-packages/broker
+     lrwxrwxrwx 1 root root 119 Jan  1  1970 Brotli-1.0.9.dist-info -> /nix/store/dn035bna0m6fnrxq64v0x245r2cs7l1z-python3.10-brotli-1.0.9/lib/python3.10/site-packages/Brotli-1.0.9.dist-info
+     lrwxrwxrwx 1 root root 113 Jan  1  1970 brotlicffi -> /nix/store/3ppyd1zrvpk0n7c55kmdygcapn73hnv1-python3.10-brotlicffi-1.0.9.2/lib/python3.10/site-packages/brotlicffi
+     lrwxrwxrwx 1 root root 131 Jan  1  1970 brotlicffi-1.0.9.2.dist-info -> /nix/store/3ppyd1zrvpk0n7c55kmdygcapn73hnv1-python3.10-brotlicffi-1.0.9.2/lib/python3.10/site-packages/brotlicffi-1.0.9.2.dist-info
+     lrwxrwxrwx 1 root root 136 Jan  1  1970 _brotli.cpython-310-x86_64-linux-gnu.so -> /nix/store/dn035bna0m6fnrxq64v0x245r2cs7l1z-python3.10-brotli-1.0.9/lib/python3.10/site-packages/_brotli.cpython-310-x86_64-linux-gnu.so
+     lrwxrwxrwx 1 root root 106 Jan  1  1970 brotli.py -> /nix/store/dn035bna0m6fnrxq64v0x245r2cs7l1z-python3.10-brotli-1.0.9/lib/python3.10/site-packages/brotli.py
+     ...................
+     lrwxrwxrwx 1 root root 119 Jan  1  1970 zstd-1.5.2.5.dist-info -> /nix/store/xss74rs462bm8c00m50m3f63b1lcxfn7-python3.10-zstd-1.5.2.5/lib/python3.10/site-packages/zstd-1.5.2.5.dist-info
+     lrwxrwxrwx 1 root root 133 Jan  1  1970 zstd.cpython-310-x86_64-linux-gnu.so -> /nix/store/xss74rs462bm8c00m50m3f63b1lcxfn7-python3.10-zstd-1.5.2.5/lib/python3.10/site-packages/zstd.cpython-310-x86_64-linux-gnu.so     
+   #+END_SRC
+
+** Tangent: my emacs config
+
+*** 
+
+\\
+
+   #+BEGIN_SRC nix
+     { stdenv, lib, pkgs, ... } @ args:
+
+     with (import ./builder.nix args);
+     pkgs.emacsWithPackages (epkgs:
+       let
+         include = path: (import path { inherit buildModule pkgs epkgs; });
+         modules = [
+           ./base ./move-lines ./multi-cursor
+           ./kookie-notmuch ./notmuch-rules
+           ./org ./rust ./theme
+         ];
+         kookie-config = bootstrap (map (p: include p) modules);
+       in
+         [ kookie-config ])     
+   #+END_SRC
+
+   https://cyberchaos.dev/kookie/nomicon/-/blob/main/infra/libkookie/overlays/kookie/emacs/default.nix
+
+*** 
+
+   #+BEGIN_SRC bash
+     export EMACSLOADPATH="${newLoadPath[*]}"
+     export emacsWithPackages_siteLisp=/nix/store/xpxy7j1f9qp16jgziwm5s3pdhvckfdbh-emacs-packages-deps/share/emacs/site-lisp
+
+     export EMACSNATIVELOADPATH="${newNativeLoadPath[*]}"
+     export emacsWithPackages_siteLispNative=/nix/store/xpxy7j1f9qp16jgziwm5s3pdhvckfdbh-emacs-packages-deps/share/emacs/native-lisp:
+
+     exec /nix/store/2lxx8irdiwk3jj1zm743m4xd276r5f1h-emacs-28.1/bin/emacs "$@"     
+   #+END_SRC
+
+*** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> ls -l /nix/store/xpxy7j1f9qp16jgziwm5s3pdhvckfdbh-emacs-packages-deps/share/emacs/site-lisp
+     total 34
+     lrwxrwxrwx  1 root root    81 Jan  1  1970 base.el -> /nix/store/wr5g5lk000lf7wchs79y0gp4p7jlgizf-base.el/share/emacs/site-lisp/base.el
+     lrwxrwxrwx  1 root root    87 Jan  1  1970 default.el -> /nix/store/jy0s5rf0i4r7f2cwsxbbahk4djsfrssr-default.el/share/emacs/site-lisp/default.el
+     dr-xr-xr-x 73 root root    73 Jan  1  1970 elpa
+     lrwxrwxrwx  1 root root   101 Jan  1  1970 kookie-notmuch.el -> /nix/store/nrq4z9l6d30li602nv7lrvbfrzc3dqiv-kookie-notmuch.el/share/emacs/site-lisp/kookie-notmuch.el
+     lrwxrwxrwx  1 root root    93 Jan  1  1970 kookie-org.el -> /nix/store/j55sjmv454q9vlhyglhfjd0mr8zs2ls0-kookie-org.el/share/emacs/site-lisp/kookie-org.el
+     lrwxrwxrwx  1 root root    93 Jan  1  1970 move-lines.el -> /nix/store/f9wd669sndaa14l6byir62ia09c258gv-move-lines.el/share/emacs/site-lisp/move-lines.el
+     lrwxrwxrwx  1 root root    97 Jan  1  1970 multi-cursor.el -> /nix/store/l3nkc3d2jj2gzpzmhj4swcs2bilj7i9i-multi-cursor.el/share/emacs/site-lisp/multi-cursor.el
+     lrwxrwxrwx  1 root root    95 Jan  1  1970 notmuch-logo.svg -> /nix/store/z7xh2h5jgqwfv05a8fakcf4869qax20v-notmuch-0.36/share/emacs/site-lisp/notmuch-logo.svg
+     lrwxrwxrwx  1 root root    99 Jan  1  1970 notmuch-rules.el -> /nix/store/qr6if0qj9mzn0hvzw1cc0lzf2q01glpx-notmuch-rules.el/share/emacs/site-lisp/notmuch-rules.el
+     lrwxrwxrwx  1 root root    81 Jan  1  1970 rust.el -> /nix/store/dqv30db78wc1fyb199l0gxjslcbg5s0c-rust.el/share/emacs/site-lisp/rust.el
+     -r--r--r--  1 root root   344 Jan  1  1970 site-start.el
+     -r--r--r--  1 root root   464 Jan  1  1970 site-start.elc
+     -r--r--r--  1 root root 10403 Jan  1  1970 subdirs.el
+     -r--r--r--  1 root root 10507 Jan  1  1970 subdirs.elc
+     lrwxrwxrwx  1 root root    83 Jan  1  1970 theme.el -> /nix/store/75dsm2imngw7949jlpwmizhgvw2k3zx5-theme.el/share/emacs/site-lisp/theme.el     
+   #+END_SRC
+
+
+** Manuals
+
+\\
+
+   + Nix (language & CLI): https://nixos.org/manual/nix/
+   + nixpkgs: https://nixos.org/manual/nixpkgs/
+   + NixOS: https://nixos.org/manual/nixos/
+
+** build-support
+
+\\
+
+   + Found in ~nixpkgs/pkgs/build-support~
+   + Basic utilities for building packages
+   + Language-specific build environments (but not all of them)
+     + The rest might be in ~pkgs/development~ or ~pkgs/top-level/<language>-packages.nix~
+
+** fetchurl
+
+\\
+
+   + Most basic fetcher
+   + Downloads the target URL and checks against the checksum
+
+   #+BEGIN_SRC nix
+     fetchurl {
+       url = "https://mirror.httrack.com/httrack-3.49.2.tar.gz";
+       sha256 = "09a0gm67nml86qby1k1gh7rdxamnrnzwr6l9r5iiq94favjs0xrl";
+     };     
+   #+END_SRC
+
+** fetchTarball
+
+\\
+
+   + Specifically wants to download a ~.tar~ archive
+   + Will unpack sources automatically
+   + Changing from ~fetchurl~ to ~fetchTarball~ will change the hash!
+
+   #+BEGIN_SRC nix
+     fetchTarball {
+       name = "httrack-";
+       url = "https://mirror.httrack.com/httrack-3.49.2.tar.gz";
+       sha256 = "0dzdw4z639iakay3270valmzc84galj6jg0my4iw0axlr5d6rx8b";
+     }
+   #+END_SRC
+
+** ~fetch(From)\*(Git)\*[Hub|Lab|ea]\*~
+
+
+\\
+
+   Specifically will clone a git revision
+
+   #+BEGIN_SRC nix
+     fetchFromGitHub { ... }
+
+     fetchFromGitLab { ... }
+
+     fetchFromGitea { ... }
+
+     ...
+   #+END_SRC
+
+** writeScript
+
+\\
+
+   The ~''~ syntax is great for in-line shell scripts
+
+   #+BEGIN_SRC nix
+     let
+       pkgs = import <nixpkgs> { };
+     in
+       pkgs.writeScript "work-git"
+         ''
+           #!${pkgs.bash}/bin/bash
+           ${pkgs.git}/bin/git \
+             -c commit.gpgSign=false \
+             -c user.email="kookie@spacekookie.de" \
+             "$@"
+         ''       
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build pkgs/write-script.nix
+     this derivation will be built:
+       /nix/store/dvpm6mvfqqgy63mhm8syixxbmchdb8h7-work-git.drv
+     building '/nix/store/dvpm6mvfqqgy63mhm8syixxbmchdb8h7-work-git.drv'...
+     /nix/store/h05lmbsryl419ygqck671k24kffw1nlg-work-git
+     
+      ❤ (theia) ~>  ./result
+     usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+                [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+                [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]     
+   #+END_SRC
+
+** writeText
+
+\\
+
+   #+BEGIN_SRC nix
+     let
+       pkgs = import <nixpkgs> { };
+     in
+       pkgs.writeText "work-git-conf"
+         ''
+           [commit]
+             gpgSign = false
+           [user]
+             email = "kookie@spacekookie.de"
+         ''       
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build pkgs/write-text.nix
+     this derivation will be built:
+       /nix/store/6w2d1ci1gm8kzraayjv08s0p0aysmhsx-work-git-conf.drv
+     building '/nix/store/6w2d1ci1gm8kzraayjv08s0p0aysmhsx-work-git-conf.drv'...
+     /nix/store/clva7rs7hnlwrxz50b22y14cjpz6kja9-work-git-conf
+     
+      ❤ (theia) ~> cat result
+     [commit]
+       gpgSign = false
+     [user]
+       email = "kookie@spacekookie.de"
+   #+END_SRC
+
+   More at https://nixos.org/manual/nixpkgs/stable/#trivial-builder-writeText
+
+**  
+
+   #+BEGIN_SRC nix
+     let
+       pkgs = import <nixpkgs> { };
+       conf = pkgs.writeText "work-git-conf"
+         ''
+           [commit]
+           gpgSign = false
+           [user]
+           email = "kookie@spacekookie.de"
+         '';
+     in
+       pkgs.writeScript "work-git"
+         ''
+           #!${pkgs.bash}/bin/bash
+           ${pkgs.git}/bin/git -c include.path="${conf}" "$@"
+         ''                         
+   #+END_SRC
+
+** ~writeText~ is just a wrapper!
+
+\\
+
+   #+BEGIN_SRC nix
+     writeText = name: text: writeTextFile { inherit name text; };     
+   #+END_SRC
+
+** Push work to build time
+
+
+** [[file:README.org][Back to index]]

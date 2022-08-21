@@ -1,0 +1,14 @@
+#+Title: Cross-compilation with Nix
+#+Author: Katharina Fey
+#+SETUPFILE: ../../html.setup
+
+* Introduction
+
+  This is an _beginner level_ course, targeted at people who have
+  _little to no_ Nix, or packaging experience.  Some _general
+  programming_ experience can be helpful, but is not required.
+
+* Course outline
+
+   1. [[./10-what-is.org][What even _is_ cross compilation??]]
+   2. [[./20-basic-usage.org][Basic usage]]

@@ -1,0 +1,20 @@
+# -*- mode: org; -*-
+
+This file contains common HTML export settings for org-mode.
+
+** Disable table of contents and header numbering
+
+   #+Options: toc:nil num:nil html_postamble:nil
+   # (setq org-html-postamble nil)
+
+** Include google font
+
+   #+HTML_HEAD: <link href="https://fonts.googleapis.com/css2?family=Exo:wght@300&display=swap" rel="stylesheet">
+
+** Use custom CSS
+
+   It's important to note that the link is relative _from_ the
+   sub-directory (where the overviews are stored).
+   
+   #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../../overview.css">
+   #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="overview.css">

@@ -1,0 +1,115 @@
+#+Title: Derivations
+#+Subtitle: A very fancy way of saying "builder"
+#+SETUPFILE: ../../reveal.setup
+
+** At the core of Nix...
+
+\\
+
+   Derivations are nix core feature for describing a build-action
+
+** ...but not special
+
+\\
+
+   Implemented as _attribute sets_ with various mandatory fields
+
+   Most fields have defaults though!  Defaults can be overriden
+
+** A deeper look
+
+\\
+
+   #+BEGIN_SRC console
+     nix-repl> hello
+     «derivation /nix/store/b3rw75kc63qd9ssb4khbf47lcj1g6ay7-hello-2.12.1.drv»
+   #+END_SRC
+
+   Derivations are files that end with the ~.drv~ suffix
+
+** A deeper look
+
+\\
+
+   #+BEGIN_SRC nix
+     Derive(
+       [("out","/nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1","","")],
+         [("/nix/store/1df310z72algpp1nxg45rhq2dfvkbrp5-bash-5.1-p16.drv",["out"]),
+           ("/nix/store/dyivpmlaq2km6c11i0s6bi6mbsx0ylqf-hello-2.12.1.tar.gz.drv",["out"]),
+           ("/nix/store/mjzy4drz2z4sbj3h5m7h3ndyvaqzdl80-stdenv-linux.drv",["out"])],
+         ["/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"],
+
+         "x86_64-linux",
+
+         "/nix/store/lj2bdg618093ny9505d0nzzjdq0fwp8a-bash-5.1-p16/bin/bash",
+
+         ["-e","/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"],
+
+         [("buildInputs",""),("builder","/nix/store/lj2bdg618093ny9505d0nzzjdq0fwp8a-bash-5.1-p16/bin/bash"),
+           ("cmakeFlags",""),("configureFlags",""),("depsBuildBuild",""),
+           ("depsBuildBuildPropagated",""),("depsBuildTarget",""),("depsBuildTargetPropagated",""),
+           ("depsHostHost",""),("depsHostHostPropagated",""),("depsTargetTarget",""),("depsTargetTargetPropagated",""),
+           ("doCheck","1"),("doInstallCheck",""),("mesonFlags",""),("name","hello-2.12.1"),("nativeBuildInputs",""),
+           ("out","/nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1"),("outputs","out"),("patches",""),
+           ("pname","hello"),("propagatedBuildInputs",""),("propagatedNativeBuildInputs",""),
+           ("src","/nix/store/pa10z4ngm0g83kx9mssrqzz30s84vq7k-hello-2.12.1.tar.gz"),
+           ("stdenv","/nix/store/43215b010yhnvpmr169abg324zq1l0sr-stdenv-linux"),
+           ("strictDeps",""),("system","x86_64-linux"),("version","2.12.1")]
+     )
+   #+END_SRC
+
+** You can build this!
+
+\\
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build /nix/store/b3rw75kc63qd9ssb4khbf47lcj1g6ay7-hello-2.12.1.drv
+     this path will be fetched (0.05 MiB download, 0.22 MiB unpacked):
+       /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+     copying path '/nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1' from 'https://cache.nixos.org'...
+     /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+   #+END_SRC
+
+   Internally, this is what Nix does anyway: evaluate a derivation,
+   and then build it.
+
+** ~stdenv.mkDerivation~
+
+\\
+
+   The main way of making derivations is the ~mkDerivation~ function.
+
+   Have a look at (some of) the arguments this function takes.
+
+   #+BEGIN_SRC nix
+     {
+       # ... 
+     , nativeBuildInputs           ? [] # -1 ->  0  N.B. Legacy name
+     , buildInputs                 ? [] #  0 ->  1  N.B. Legacy name
+
+     , checkInputs                 ? []
+     , installCheckInputs          ? []
+
+     , configureFlags ? []
+     , cmakeFlags ? []
+     , mesonFlags ? []
+
+     , doCheck ? config.doCheckByDefault or false
+     , doInstallCheck ? config.doCheckByDefault or false
+     , strictDeps ? if config.strictDepsByDefault then true else stdenv.hostPlatform != stdenv.buildPlatform
+
+     , enableParallelBuilding ? config.enableParallelBuildingByDefault
+     , meta ? {}
+     , passthru ? {}
+     , outputs ? [ "out" ]
+     , sandboxProfile ? ""
+     , propagatedSandboxProfile ? ""
+
+     , hardeningEnable ? []
+     , hardeningDisable ? []
+
+     , patches ? []
+     , ... } @ attrs: ...
+   #+END_SRC
+
+** [[file:README.org][Back to index]]

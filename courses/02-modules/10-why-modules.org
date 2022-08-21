@@ -1,0 +1,30 @@
+#+Title: Why modules?
+#+SETUPFILE: ../../reveal.setup
+
+** Modules are pure system configuration
+
+** Consider two scenarios
+
+\\
+
+   + Package A installs /etc/service.conf
+   + Package B installs /etc/service.conf
+
+   Does installing Package B yield an error?  Or is the config
+   overwritten?  Or can it be merged?
+
+** 
+
+Modules don't exactly solve this problem, instead they avoid it!
+
+** Module basics
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       imports = [ ./keyboard.nix ./development.nix ];
+
+       
+     }
+   #+END_SRC

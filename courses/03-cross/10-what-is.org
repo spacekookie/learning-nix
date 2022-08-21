@@ -1,0 +1,4 @@
+#+Title: What even _is_ cross-compilation?
+#+SETUPFILE: ../../reveal.setup
+
+* Something something binaries

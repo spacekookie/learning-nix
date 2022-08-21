@@ -1,0 +1,164 @@
+#+Title: 🧙‍♀️ Show me the magic 🧙
+#+SETUPFILE: ../../reveal.setup
+
+** Example project
+
+\\
+
+   Let's consider a simple project built with Nix
+
+   file:imgs/weather-gov.png
+
+** Project structure
+
+\\
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~/prometheus-weather-gov> tree
+      .
+      ├── default.nix
+      ├── docker.nix
+      ├── Makefile
+      ├── service.nix
+      ├── setup.cfg
+      ├── src
+      │   └── weather.py
+      └── test.nix
+   #+END_SRC
+
+** ✨ Demo Time ✨
+
+** 
+
+   #+BEGIN_SRC nix
+     # default.nix
+     let
+       pkgs = import <nixpkgs> { };
+       myPython = pkgs.python3.withPackages
+         (pypkgs: with pypkgs; [requests flask prometheus_client pendulum ]);
+     in
+       pkgs.stdenv.mkDerivation {
+         name = "prometheus-weather-gov";
+         src = ./.;
+         buildInputs = with pkgs.python3.pkgs; [
+           myPython mypy flake8 black
+         ];
+       }
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC Makefile
+     # Makefile
+     test:
+         black ./src
+         flake8 .
+     
+     install:
+         mkdir -p $(out)/bin
+         cp ./src/weather.py $(out)/bin/prometheus-exporter-weather-gov
+         chmod +x $(out)/bin/prometheus-exporter-weather-gov
+   #+END_SRC
+   
+** Export docker images
+
+\\
+
+   #+BEGIN_SRC nix
+     # docker.nix
+     let
+       pkgs = import <nixpkgs> { };
+       exporter = import ./default.nix;
+     in
+     pkgs.dockerTools.buildLayeredImage {
+       name = "prometheus-exporter-weather-gov";
+       config = {
+         Cmd = "${exporter}/bin/prometheus-exporter-weather-gov";
+         ExposedPorts."5000/tcp" = { };
+       };
+     }
+   #+END_SRC
+
+** Run as a NixOS service
+
+\\
+
+   #+BEGIN_SRC nix
+     # service.nix
+     let
+       exporter = import ./default.nix;
+     in {
+       networking.firewall.allowedTCPPorts = [ 5000 ];
+       systemd.services.prometheus-exporter-weather-gov = {
+         wantedBy = [ "multi-user.target" ];
+         serviceConfig = {
+           ExecStart = "${exporter}/bin/prometheus-exporter-weather-gov";
+         };
+       };
+     }
+   #+END_SRC
+
+** Testing services
+
+\\
+
+   #+BEGIN_SRC nix
+     # test.nix
+     import <nixpkgs/nixos/tests/make-test-python.nix> ({ pkgs, ... }:
+       {
+         name = "prometheus-exporter-weather-gov";
+         machine = { pkgs, ... }: {
+           imports = [ ./service.nix ];
+         };
+         testScript =
+           ''
+             start_all()
+             machine.wait_for_unit("prometheus-exporter-weather-gov.service")
+             machine.wait_for_open_port(5000)
+             machine.succeed("curl http://127.0.0.1:5000/")
+           '';
+       })
+   #+END_SRC
+
+** ~nix-generators~
+
+\\
+
+   + Project which uses Nix to generate various types of VMs
+   + Re-uses the same service file definition as a standard NixOS
+     system
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nixos-generate -f amazon -c ./service.nix
+     [...]
+
+      ❤ (theia) ~> nixos-generate -f vm -c ./service.nix
+     [...]
+
+      ❤ (theia) ~> result/bin/run-nixos-vm
+     [qemu goes brrrr]
+   #+END_SRC
+
+** Compliance, Auditing, Reliability
+
+\\
+
+   + Why do we depend on ~$X~?
+   + Why did build of ~$Y~ fail?
+
+   #+BEGIN_SRC console
+      ❤ (theia) nix why-depends /run/current-system /nix/store/fdj4b4jp0p2b45djgwj2gwv37va67zrz-perl-5.34.1/bin/perl
+     /nix/store/0g0k2j6k0jnpyc5m7qx2vra0vhkm50wk-nixos-system-hyperion-22.11pre-git
+     └───/nix/store/30ljg6zlkp9gkvqjnd4b2s1p2z5kkzcn-perl-5.34.1-env
+         └───/nix/store/fdj4b4jp0p2b45djgwj2gwv37va67zrz-perl-5.34.1
+   #+END_SRC
+
+** Nix is a tool to...
+
+\\
+
+   + move fast and +break+ maintain things (and have working builds)
+   + share environments across a team
+   + share build artifacts with the world
+
+** [[file:README.org][Back to index]]

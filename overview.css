@@ -1,0 +1,26 @@
+body {
+    font-family: 'Exo', sans-serif;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+h1 {
+    font-size: 2.5rem;
+    padding-bottom: 1rem;
+    text-decoration: underline;
+}
+
+#content {
+    max-width: 900px;
+    align: center;
+}
+
+a { color: #377ffc; }
+
+a:visited { color: #377ffc; }
+
+a:hover {
+    color: #000000;
+    background-color: #377ffc;
+}
