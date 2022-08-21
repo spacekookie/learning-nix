@@ -11,9 +11,9 @@
 * Course outline
 
    1. [[./10-why-modules.org][Why Modules?]]
-   2. [[./20-module-anatomy.org][Module anatomy]]
-   3. [[./30-using-modules.org][Using modules]]
+   2. [[./20-using-modules.org][Using modules]]
    4. [[./40-exercise-configuration.org][(Exercise) Building your first NixOS system]]
-   5. [[./50-creating-modules.org][Building new modules]]
-   6. [[./60-advanced-types][Advanced types]]
-   7. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]
+   5. [[./20-module-anatomy.org][Module anatomy]]
+   6. [[./50-creating-modules.org][Building new modules]]
+   7. [[./60-advanced-types][Advanced types]]
+   8. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]

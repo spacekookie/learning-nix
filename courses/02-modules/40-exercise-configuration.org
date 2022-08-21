@@ -1,0 +1,63 @@
+#+Title: Let's build a small nginx VM
+#+SETUPFILE: ../../reveal.setup
+
+** Overview
+
+\\
+
+   + Build a VM which includes ~echo "Hello" | cowsay > cow.txt~
+   + Use the nginx module to serve this file on port 80
+   + Don't forget to open that port in the firewall
+
+   #+BEGIN_SRC console
+     nix build -f '<nixpkgs/nixos>' vm \
+        -I nixos-config=nginx.nix
+     env QEMU_NET_OPTS="hostfwd=tcp::8080-:80" result/bin/run-nixos-vm
+   #+END_SRC
+
+   
+** 
+
+\\
+
+   #+BEGIN_SRC nix
+     { stdenv, pkgs, ... }:
+     let
+       cowFile = pkgs.runCommand "cowfile-gen" {} ''
+         mkdir $out
+         echo "Hello" | ${pkgs.cowsay}/bin/cowsay > $out/cow.txt
+       '';
+     in
+     {
+       services.nginx = {
+         # ...
+       };
+     }
+   #+END_SRC
+
+** Reference solution
+
+** 
+
+   #+BEGIN_SRC nix
+     { stdenv, pkgs, ... }:
+     let
+       cowFile = pkgs.runCommand "cowfile-gen" {} ''
+         mkdir $out
+         echo "Hello" | ${pkgs.cowsay}/bin/cowsay > $out/cow.txt
+       '';
+     in
+     {
+       services.nginx = {
+         enable = true;
+         virtualHosts."main" = {
+           default = true;
+           locations."/" = {
+             root = cowFile;
+           };
+         };
+       };
+     }
+   #+END_SRC
+
+** [[./README.org][Back to index]]
