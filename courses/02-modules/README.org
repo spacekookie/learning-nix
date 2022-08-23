@@ -2,7 +2,7 @@
 #+Author: Katharina Fey
 #+SETUPFILE: ../../html.setup
 
-* Introduction
+  [[../../README.org][Back to Index]]
 
   This is a _beginner level_ course, targeted at people who have some
   basic experienc with Nix.  It should be taught _after_ the initial
@@ -10,10 +10,9 @@
 
 * Course outline
 
-   1. [[./10-why-modules.org][Why Modules?]]
+   1. [[./10-module-basics.org][Module basics]]
    2. [[./20-using-modules.org][Using modules]]
-   4. [[./40-exercise-configuration.org][(Exercise) Building your first NixOS system]]
-   5. [[./20-module-anatomy.org][Module anatomy]]
-   6. [[./50-creating-modules.org][Building new modules]]
-   7. [[./60-advanced-types][Advanced types]]
-   8. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]
+   3. [[./30-exercise-configuration.org][(Exercise) Building your first NixOS system]]
+   4. [[./40-module-anatomy.org][Module anatomy]]
+   5. [[./60-advanced-types.org][Advanced types]]
+   6. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]

@@ -2,7 +2,7 @@
 #+Author: Katharina Fey
 #+SETUPFILE: ../../html.setup
 
-* Introduction
+  [[../../README.org][Back to Index]]
 
   This is a _beginner level_ course, targeted at people who have
   _little to no_ Nix, or packaging experience.  Some _general

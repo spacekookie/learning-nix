@@ -9,7 +9,7 @@
 \\
 
    #+BEGIN_SRC nix
-     { config, pkgs, ... }:
+     { pkgs, ... }:
      {
        systemd.services.helloService = {
          enable = true;
@@ -29,8 +29,10 @@
 
    + ~sudo nixos-rebuild switch~
    + ~nix build -f <nixpkgs/nixos> system && result/bin/switch-to-configuration~
-   + or as a VM: ~nixos-generate -f vm -c ./config.nix~
+   + or as a VM: ~nix build -f '<nixpkgs/nixos>' vm -I nixos-config=config.nix~
 
+** 
+   
    #+BEGIN_SRC console
       ❤ (theia) ~> sudo systemctl status helloService.service
      ● helloService.service

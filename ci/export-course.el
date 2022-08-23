@@ -9,6 +9,8 @@
   ;; Make sure org-reveal is loaded and set-up
   (load-library "reveal")
   (setq org-reveal-root "../../.templates")
+  (setq org-html-preamble nil)
+  (setq org-html-postamble nil)
   
   ;; Export the README
   (find-file "README.org")

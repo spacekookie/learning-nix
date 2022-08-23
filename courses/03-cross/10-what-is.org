@@ -1,4 +1,34 @@
 #+Title: What even _is_ cross-compilation?
 #+SETUPFILE: ../../reveal.setup
 
-* Something something binaries
+** Varied terms
+
+\\
+
+   Cross-compilation is the act of producing binaries for a "different
+   system".
+
+   There are two diffent ways this can apply.
+
+** Cross operating system
+
+\\
+
+   For example: building an application on MacOS, for Linux.
+
+   
+** Cross CPU architecture
+
+\\
+
+   For example: building an application on x86_64 for aarch64.
+
+** Some questions to keep in mind
+
+\\
+
+   + What is relevant for a build to succeed?
+   + What is then needed by the output of this build?
+   + Does the output of the build itself try to output more builds?
+
+** [[./README.org][Back to index]]

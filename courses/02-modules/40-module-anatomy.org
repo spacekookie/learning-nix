@@ -10,7 +10,6 @@
    + Modules are parsed, then merged into one big attrset
 
    Putting this all together, let's write our own module
-
 ** Basic outline
 
 \\
@@ -28,7 +27,7 @@
    + ~config~ keys are merged for _post-evalutation_
    + ~imports~ are not merged but instead queued for evaluation
 
-**
+** 
 
    #+BEGIN_SRC nix
      # hamster-module.nix
@@ -54,6 +53,8 @@
    + ~lib.mkOption~ creates an arbitrary typed option
    + Each option can be given a description, default value, example
      configuration, etc
+
+** 
 
    #+BEGIN_SRC nix
      {
@@ -91,3 +92,48 @@
      }
    #+END_SRC
 
+** Module patterns
+
+\\
+
+   When creating a module, alias the local option scope in a
+   ~let...in~.
+
+   #+BEGIN_SRC nix
+     { config, lib, ... }:
+
+     let cfg = config.foo.bar.my-module;
+     in
+     with lib;
+     {
+       options.foo.bar.my-module = {
+         # ...
+       };
+
+       config = mkIf cfg.enable {
+         # ...
+       }
+     }
+   #+END_SRC
+
+** Module patterns
+
+\\
+
+   If your configuration block is too complex, consider moving it to a
+   different file.
+
+   #+BEGIN_SRC nix
+     { config, lib, ... } @ args:
+
+     with lib;
+     {
+       options.foo.bar.my-module = {
+         # ...
+       };
+  
+       config = (import ./config.nix args);
+     }
+   #+END_SRC
+
+** [[file:README.org][Back to index]]

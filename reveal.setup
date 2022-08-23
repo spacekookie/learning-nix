@@ -7,7 +7,7 @@ This file contains common reveal.js export settings for org-mode.
    I don't want a TOC or bullet numbering by default.  We have the
    dedicated HTML pages as an index
 
-   #+Options: toc:nil num:nil
+   #+Options: toc:nil num:nil ^:nil
    
 ** Get reveal.js from a CDN
 

@@ -1,0 +1,25 @@
+#+Title: Advanced Types
+#+Subtitle: For some type of advanced Nix users
+#+SETUPFILE: ../../reveal.setup
+
+** The nixpkgs type system is deep and strange
+
+** Submodules
+
+\\
+
+   + Many NixOS options rely on submodule types
+   + Looking at the ~railcar~ virtualisation module as an example
+
+   #+BEGIN_SRC nix
+     { pkgs, ... }:
+     {
+       services.railcar = {
+         containers."test-container" = {
+           cmd = "${pkgs.hello}/bin/hello";
+         };
+       };
+     }
+   #+END_SRC
+
+** [[./README.org][Back to index]]
