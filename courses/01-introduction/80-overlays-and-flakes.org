@@ -52,11 +52,16 @@
 
    file:imgs/overlays4.png
 
-** Package overrides
+** 
+
+   + ~self~ is sometimes also called ~final~
+   + ~super~ is sometimes also called ~prev~
+
+** Overrides
 
 \\
 
-   You _can_ override packagse without an overlay, for example in-line
+   You _can_ override packages without an overlay, for example in-line
    to your configuration!
 
    #+BEGIN_SRC nix
@@ -75,15 +80,31 @@
 
 \\
 
-   + ~override~ overrides attributes _in_ a derivation
-   + ~overrideAttrs~ overrides attributes passed _to_ ~mkDerivation~
+   + ~override~ overrides attributes in a _derivation_
+   + ~overrideAttrs~ overrides attributes passed _to ~mkDerivation~_
 
 ** 
 
-   Let's put it all together and override htop!
+   Let's put it all together and override actually htop!
+
+   #+BEGIN_SRC nix
+     import <nixpkgs> {
+       overlays = [
+         (import overlays/patches);
+         # ...
+       ];
+     }
+   #+END_SRC
 
    #+BEGIN_SRC console
-     $ tree patches
+      ❤ (theia) ~/sys> ls overlays
+     kookie/  patches/  rust/  staging/
+   #+END_SRC
+   
+** 
+   
+   #+BEGIN_SRC console
+      ❤ (theia) ~> tree patches
      patches/
      └── htop
          ├── 0001-htop-untruncated-username.patch
@@ -125,16 +146,16 @@
      export NIX_PATH="$NIX_PATH:nixpkgs-overlays=/path/to/overlay"
    #+END_SRC
 
-** Custom ~default.nix~ root
+** Nixpkgs initialisation parameter
 
 \\
 
-   + Instead of loading ~<nixpkgs>~ directly, load your own
-     ~default.nix~
-   + Then load ~<nixpkgs>~ and attach the ovelay
-   + This doesn't make ~nix-shell~ work though :(
+   + When loading ~<nixpkgs>~ you can provide various parameters
+   + One of them is the ~overlays~ key, which accepts a list
+   + Alternatively: define ~load-nixpkgs.nix~, and load that instead
 
    #+BEGIN_SRC nix
+     # load-nixpkgs.nix
      { overlays ? [], ... } @ args:
      import <nixpkgs> (args // {
        overlays = overlays ++ [ (import ./overlay) ];
@@ -142,9 +163,27 @@
    #+END_SRC
 
    #+BEGIN_SRC console
-     ❤ (theia) ~> nix build -f . htop
+     ❤ (theia) ~> nix build -f load-nixpkgs.nix htop
      ... build the patched htop ...
    #+END_SRC
+
+** In-line example
+
+\\
+
+   Create an in-line overlay to override a certain package
+
+   #+BEGIN_SRC nix
+     import <nixpkgs> ({
+       overlays = [
+         (self: super: {
+           htop = builtins.trace "htop in the overlay" super.htop;
+         })
+       ];
+     })
+   #+END_SRC
+
+   Quiz: what happens if we select ~self.htop~ ?
 
 ** Pinning sources 📌
 
