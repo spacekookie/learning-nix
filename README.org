@@ -1,14 +1,14 @@
-#+Title: NixOS workshop material
+#+Title: NixOS training material
 #+Author: Katharina Fey
 #+SETUPFILE: html.setup
 
-  Welcome to the Nix teaching material repository.  This material was
-  created by [[file:into.org][Katharina Fey]] with the purpose of having a set of slides,
-  code examples, example projects, and advanced visualisations to
-  teach the Nix expression language and ecosystem to developers of
-  varying backgrounds.
+  Welcome to my Nix training material repository.  I created this
+  material with the purpose of having a set of slides, code examples,
+  example projects, and advanced visualisations to teach the Nix
+  expression language and ecosystem to developers of varying
+  backgrounds.
 
-  Is your company looking for teaching?  [[mailto:kookie@spacekookie.de][Contact me]] for details and
+  Is your company looking for trainings?  [[mailto:kookie@spacekookie.de][Contact me]] for details and
   booking!
 
 * Outline
@@ -28,7 +28,24 @@
 
 * Building these slides
 
-   These slides are built with ~org-mode~ and ~elisp~.
+   The slides are written in [org-mode], a plain-text markup language.
+   As such it is very easy to read and adapt in any text editor.
+   GitHub and GitLab are able to render the documents, but not as
+   slide decks.  There is currently no hosted version of the slides
+   available.
+
+   To build the slides you will need emacs with ~org-mode~ installed.
+   You can include the ~ci/export-course.el~ file and then run
+   ~export-course~ in the directory of any of the sub-courses to
+   generate the slide decks.
+
+* Sponsors
+
+   This course has been sponsored by various companies that have paid
+   for trainings and the creation of new material in the past.
+
+   (todo: insert logos)
+   
 
 * License
 

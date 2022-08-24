@@ -57,6 +57,29 @@
    + ~self~ is sometimes also called ~final~
    + ~super~ is sometimes also called ~prev~
 
+** 
+
+   #+BEGIN_SRC nix
+     self: super: {
+       htop = builtins.trace "Overriding the htop package" super.htop;
+     }
+   #+END_SRC
+
+** Overlays to create packages
+
+\\
+
+   Useful for personal or organisation-wide packages.
+
+   #+BEGIN_SRC nix
+     self: super: {
+       my-hello = self.writeShellScript "my-hello" ''
+         ${self.bash}/bin/bash
+         ${self.hello}/bin/hello | ${self.cowsay}/bin/cowsay
+       '';
+     }
+   #+END_SRC
+
 ** Overrides
 
 \\
@@ -117,6 +140,8 @@
      }     
    #+END_SRC
 
+   Quiz: why do we inherit from ~super~ to pass ~htop~?
+   
 ** 
 
    + Don't define a new package, override parts of the existing one
@@ -191,10 +216,22 @@
 
    How do you currently manage your ~<nixpkgs>~ dependency?
 
-   + ~nix-channel~ :: nixpkgs may change at any time
+   + ~nix-channel~ :: impure; nixpkgs may change at any time
    + Local nixpkgs checkout :: more or less convenient.  If you are
      going down this route I recommend a git-submodule or git-subtree
    + Flakes :: The hot new shit that everyone is talking about
+
+** Subtree & Submodule
+
+\\
+
+   + Lock a specific configuration state to a particular nixpkgs
+     version.
+   + Rolling back configuration _also_ rolls back nixpkgs
+     automatically.
+   + Subtrees _can_ be heavy on a repository, because the entire
+     history is merged
+     + They do potentially make upstream contributions easier though.
 
 ** Flakes
 
@@ -255,5 +292,7 @@
      + More RFCS: RFC#123, RFC#105, probably more to come :)
    + https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#flake-references
    + I don't use flakes, so I can't give you a lot of insight on it
+
+** Questions?
 
 ** [[file:README.org][Back to index]]
