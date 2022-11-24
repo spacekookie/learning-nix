@@ -1,0 +1,20 @@
+#+Title: Nixpkgs | Day 3
+#+Author: Katharina Fey
+#+SETUPFILE: ../../html.setup
+
+[[../../README.org][Back to Index]]
+
+Today we will cover the following subjects:
+
++ What is ~nixpkgs~ and how does it works
++ Where can you find /X/?  How do you find /X/?
++ What are package overrides and why are they useful?
++ Overlays and how to manage sources
+  
+** Sections
+
+1. [[./70-nixpkgs.org][Nixpkgs]]
+2. [[./71-nixpkgs-exercise.org][(Exercise) Writing a safe shell script]]
+3. [[./80-overlays-and-flakes.org][Overlays & Flakes]]
+4. [[./90-development.org][Nix for developers]]
+

@@ -1,19 +1,31 @@
-#+Title: Introduction to Nix
+#+Title: Introduction | Day 1
 #+Author: Katharina Fey
 #+SETUPFILE: ../../html.setup
 
-  [[../../README.org][Back to Index]]
+[[../../README.org][Back to Index]]
 
+Today we will cover the following subjects:
+
++ What is /Nix/ and why do you want it in your life?
++ How does /Nix/ work on a conceptual level?
++ What is the /Nix language/ syntax?
+
+** Sections
+
+1. [[./10-why-nix.org][Why Nix?]]
+2. [[./20-elevator-pitch.org][Elevator pitch]]
+3. [[./30-fundamentals.org][How does Nix do it?]]
+4. [[./40-nix-language.org][The Nix language]]
+
+
+
+  
   This is a _beginner level_ course, targeted at people who have
   _little to no_ Nix, or packaging experience.  Some _general
   programming_ experience can be helpful, but is not required.
   
 * Course outline
 
-   1. [[./10-why-nix.org][Why Nix?]]
-   2. [[./20-elevator-pitch.org][Elevator pitch]]
-   3. [[./30-fundamentals.org][How does Nix do it?]]
-   4. [[./40-nix-language.org][The Nix language]]
    5. [[./50-derivations.org][Derivations]]
    6. [[./51-fixed-output.org][Fixed output Derivations]]
    7. [[./60-exercise-packaging.org][(Exercise) Building your first packages]]

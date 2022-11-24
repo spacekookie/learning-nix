@@ -1,0 +1,22 @@
+#+Title: Module system | Day 5
+#+Author: Katharina Fey
+#+SETUPFILE: ../../html.setup
+
+
+[[../../README.org][Back to Index]]
+
+Today we will cover the following subjects:
+
++ What are NixOS modules?
++ Using, writing, and managing modules
++ Advanced type shennigans
+
+
+** Sections
+
+1. [[./10-module-basics.org][Module basics]]
+2. [[./20-using-modules.org][Using modules]]
+3. [[./30-exercise-configuration.org][(Exercise) Building your first NixOS system]]
+4. [[./40-module-anatomy.org][Module anatomy]]
+5. [[./60-advanced-types.org][Advanced types]]
+6. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]

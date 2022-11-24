@@ -1,14 +1,16 @@
 ;; TODO: swap the theme to be more easily readable on white background
-(defun export-course ()
-  "Export a course tree as a set of HTML files"
+(defun export-all-courses ()
+  "Export all courses from a particular course-tree to HTML"
   (interactive)
 
+  (setq nix-course-export-root (read-directory-name "Select root of course tree"))
+  
   ;; Manually require ox-reveal
   (require 'ox-reveal)
   
   ;; Make sure org-reveal is loaded and set-up
   (load-library "reveal")
-  (setq org-reveal-root "../../.templates")
+  (setq org-reveal-root (concat nix-course-export-root "../.templates"))
   (setq org-html-preamble nil)
   (setq org-html-postamble nil)
   
@@ -24,4 +26,5 @@
    (delete "*.html"
            (delete "README.org"
                    (directory-files "." nil "\.org$" t)))))
+
 (provide 'export-course)

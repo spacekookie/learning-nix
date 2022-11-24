@@ -2,51 +2,84 @@
 #+Author: Katharina Fey
 #+SETUPFILE: html.setup
 
-  Welcome to my Nix training material repository.  I created this
-  material with the purpose of having a set of slides, code examples,
-  example projects, and advanced visualisations to teach the Nix
-  expression language and ecosystem to developers of varying
-  backgrounds.
+Welcome to my Nix training material repository!
 
-  Is your company looking for trainings?  [[mailto:kookie@spacekookie.de][Contact me]] for details and
-  booking!
+I created this material for the purpose of having a set of slides,
+code snippets, example projects, and advanced visualisations to teach
+the /Nix expression language/ and ecosystem to developers of varying
+backgrounds.
 
-* Outline
+(Note that this material was really designed with a teacher in mind.
+As such, some slides are very sparse and not self-explanatory.  I'm
+working on expanding speaker notes to make the course material easier
+to read on your own.)
 
-   This repository is structured as a set of course trees.  Each tree
-   focuses on conveying a single aspect of the Nix ecosystem.  Each
-   course tree should take between 2-4 hours to teach.  Following is
-   an overview of available courses.
+*Is your company looking for on-site or remote training?* [[mailto:kookie@spacekookie.de][Contact me]]
+for details and booking!
 
-   - [[./courses/01-introduction/README.org][Introduction to Nix]] :: A general introduction to the Nix
-     ecosystem, the theoretical mechanisms that are required to make
-     it work, and an outline of what problems Nix solves
-   - [[./courses/02-modules/README.org][NixOS module system]] :: A deep-dive into the Nix module system,
-     NixOS configuration principles and designing module abstractions
-   - [[./courses/03-cross/README.org][Cross compilation]] :: An excursion into doing cross-compilation
-     with Nix
+** Course outline
 
-* Building these slides
+This course is meant to be taught in 5 half-day sessions.  It ranges
+from beginner subjects all the way to advanced usage of the module
+system, cross-compilation, and other special niches.
 
-   The slides are written in [org-mode], a plain-text markup language.
-   As such it is very easy to read and adapt in any text editor.
-   GitHub and GitLab are able to render the documents, but not as
-   slide decks.  There is currently no hosted version of the slides
-   available.
++ [[file:courses/day-01-introduction/README.org][Day 1: Introduction]] :: A short introduction and elevator-pitch of
+  what Nix(OS) can do for you.  This course covers some theoretical
+  background on how Nix does what it does, priming you to think like
+  Nix, and some exercises to get practise in writing Nix code.
 
-   To build the slides you will need emacs with ~org-mode~ installed.
-   You can include the ~ci/export-course.el~ file and then run
-   ~export-course~ in the directory of any of the sub-courses to
-   generate the slide decks.
++ [[file:courses/day-02-builders/README.org][Day 2: Builders]] :: Get started writing Nix packages with so called
+  /stand-alone builders/.  This course covers some of the packaging
+  details, such as understanding dependencies and overriding build
+  mechanisms.
 
-* Sponsors
++ [[file:courses/day-03-nixpkgs/README.org][Day 3: Nixpkgs]] :: This course is an introduction into /nixpkgs/, a
+  gigantic repository set of over 80,000 packages.  Nixpkgs allows you
+  to re-use packaging code other users have contributed.  As part of
+  this course we cover using nixpkgs tools, as well as how to
+  contribute things you have made back into nixpkgs.
 
-   This course has been sponsored by various companies that have paid
-   for trainings and the creation of new material in the past.
++ [[file:courses/day-04-cross/README.org][Day 4: Cross-compilation]] :: In this course we cover
+  cross-compilation with Nix.  This includes theoretical background on
+  what /cross-compilation/ is, some Nix-specific concepts, and
+  practical examples for packaging embedded (Rust) code, as well as
+  fixing existing cross-compilation errors.
 
-   (todo: insert logos)
++ [[file:courses/day-05-modules/README.org][Day 5: Module system]] :: Nix is a powerful configuration language.
+  If you run NixOS on your system, you may have already used modules!
+  This course demystifies their functionality and provides a set of
+  examples on how to build your own module abstractions.
+
+** Building these slides
+
+The slides are written in [[https://org-mode.org][org-mode]], a plain-text markup language.  As
+such it is very easy to read and adapt in any text editor.  GitHub and
+GitLab are able to render the documents, but not as slide decks.
+
+A hosted version of this course is available at [[https://learn.spacekookie.de/nix/][learn.spacekookie.de]]!
+
+If you want to build the slides yourself, you will need ~org-mode~ and
+~org-reveal~ installed.  You can find a utility function for
+generating the output in [[./ci/export-course.el][ci/export-course.el]].  (Load the function with
+=M-x eval-buffer=)
+
+** Sponsors
+
+This course has been sponsored by various companies that have paid for
+training and the creation of new material in the past.
+
+(todo: insert logos)
    
+** License
 
-* License
+This material is licensed under the Creative Commons
+Attribution-ShareAlike 4.0 International (CC BY-SA 4.0) or later.
 
-   This workshop material is licensed CC-BY-SA.
+This license allows you to include the material in your own work, as
+long as that work is also shared under the same license (CC-BY-SA 4.0
+or later).  Importantly your work must *attribute* any original
+authors of work that you have used.
+
+*This text is not legal advice!* Check with a lawyer in your
+respective jurisdiction what your rights and obligations under this
+license are.
