@@ -128,7 +128,7 @@
    #+END_SRC
    
    + Take a value from one scope and copy it to another
-   + Essentially ~{ inherit foo }~ is the same as writing ~{ foo =
+   + Essentially ~{ inherit foo; }~ is the same as writing ~{ foo =
      foo; }~.
 
 ** The ~import~ keyword
