@@ -16,7 +16,7 @@
 \\
 
    + Setup a build environment?
-   + Install depnedencies?
+   + Install dependencies?
    + Find and link against the _right_ version of a library
 
 ** 
@@ -56,7 +56,7 @@
 
    + Distribution package managers can't package every library
    + Libraries that /are/ packaged can easily go out of date
-   + Distribtion stability guarantees are not always great for
+   + Distribution stability guarantees are not always great for
      software development (and also misunderstood!)
    + Package managers keep track of symbolic names
 
