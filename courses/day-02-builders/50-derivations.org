@@ -1,20 +1,102 @@
 #+Title: Derivations
-#+Subtitle: A very fancy way of saying "builder"
+#+Subtitle: A very fancy way of saying "build env"
 #+SETUPFILE: ../../reveal.setup
 
-** At the core of Nix...
+** Core part of Nix
 
 \\
 
-   Derivations are nix core feature for describing a build-action
+   A derivation is an attribute set that describes a build
+   environment.  Derivations on-disk are stored in ~.drv~ files.
 
-** ...but not special
+   #+BEGIN_SRC nix repl
+     nix-repl> derivation { name = "my_derivation"; builder = "my_builder"; system = "my_system"; }
+     «derivation /nix/store/3k6kqw1s85kaz5vgm43v6mqxjpn812sy-my_derivation.drv»
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC shell
+      ❤ (theia) ~> nix show-derivation /nix/store/d4ncq4ww3zmmm6j6q0j17631qbid59m3-my_name.drv
+     {
+         "/nix/store/d4ncq4ww3zmmm6j6q0j17631qbid59m3-my_name.drv": {
+             "outputs": {
+                 "out": {
+                     "path": "/nix/store/70ppafkb5a37k6im23cwgrnpl243v1mq-my_name"
+                 }
+             },
+             "inputSrcs": [],
+             "inputDrvs": {},
+             "system": "my_system",
+             "builder": "my_builder",
+             "args": [],
+             "env": {
+                 "builder": "my_builder",
+                 "name": "my_name",
+                 "out": "/nix/store/70ppafkb5a37k6im23cwgrnpl243v1mq-my_name",
+                 "system": "my_system"
+             }
+         }
+     }
+   #+END_SRC
+
+** You can build ~.drv~ files
 
 \\
 
-   Implemented as _attribute sets_ with various mandatory fields
+   ... or not ...
 
-   Most fields have defaults though!  Defaults can be overriden
+   #+BEGIN_SRC shell
+     ❤ (theia) ~> nix-build /nix/store/d4ncq4ww3zmmm6j6q0j17631qbid59m3-my_name.drv
+     this derivation will be built: /nix/store/d4ncq4ww3zmmm6j6q0j17631qbid59m3-my_name.drv
+     error: a 'my_system' with features {} is required to build
+         '/nix/store/d4ncq4ww3zmmm6j6q0j17631qbid59m3-my_name.drv',
+         but I am a 'x86_64-linux' with features {benchmark, big-parallel, kvm, nixos-test}
+   #+END_SRC
+
+** ~{ name = ... }~
+
+\\
+
+   + Specifies the name and version of the package being built
+   + Format: ~${pname}-${version}~
+   + Somewhat deprecated/ out of style
+     + Use ~pname~ and ~version~ explicitly instead!
+
+** ~{ builder = ... }~
+
+\\
+
+   + Builders are the root process which produces a package output.
+   + Usually this is ~${pkgs.bash}/bin/bash~
+   + It is /very unusual/ to change the builder
+   
+** ~{ system = ... }~
+
+\\
+
+   + The current build system
+   + This value can be changed for cross-compilation
+   + By default filled in with ~builtins.currentSystem~
+   + More on this during the cross-compilation day
+
+** Derivations are attribute sets
+
+\\
+
+   In fact, you can create a useless derivation very easily!
+
+   #+BEGIN_SRC nix
+     nix-repl> { type = "derivation"; }
+     «derivation ???»
+   #+END_SRC
+
+** Utility functions
+
+\\
+
+   + Very basic derivation builder function: ~derivation~
+   + /Much/ more useful derivation builder function: ~mkDerivation~
 
 ** A deeper look
 
@@ -25,11 +107,11 @@
      «derivation /nix/store/b3rw75kc63qd9ssb4khbf47lcj1g6ay7-hello-2.12.1.drv»
    #+END_SRC
 
-   Derivations are files that end with the ~.drv~ suffix
-
 ** A deeper look
 
 \\
+
+   The raw ~.drv~ file on-disk.
 
    #+BEGIN_SRC nix
      Derive(
@@ -58,26 +140,100 @@
      )
    #+END_SRC
 
-** You can build this!
+** A deeper look
 
 \\
 
-   #+BEGIN_SRC console
-      ❤ (theia) ~> nix-build /nix/store/b3rw75kc63qd9ssb4khbf47lcj1g6ay7-hello-2.12.1.drv
-     this path will be fetched (0.05 MiB download, 0.22 MiB unpacked):
-       /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
-     copying path '/nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1' from 'https://cache.nixos.org'...
-     /nix/store/3ng68pn55h3na7dayydpqrh4bm1ag2sl-hello-2.12.1
+   The evaluated ~.drv~ file.
+
+   #+BEGIN_SRC nix
+     {
+       "/nix/store/qcvlk255x98i46cg9vphkdw5pghrizsh-hello-2.12.1.drv": {
+         "outputs": {
+           "out": {
+             "path": "/nix/store/g2m8kfw7kpgpph05v2fxcx4d5an09hl3-hello-2.12.1"
+           }
+         },
+         "inputSrcs": [
+           "/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"
+         ],
+         "inputDrvs": {
+           "/nix/store/2knhp55njxnhh7j1l0w7ns0hi6bxmn1k-stdenv-linux.drv": [
+             "out"
+           ],
+           "/nix/store/3sjd4vvbdssljiy45a9igjy9kkxd2skq-bash-5.1-p16.drv": [
+             "out"
+           ],
+           "/nix/store/42j03b6x0cdj84b77mhkh9zwqgq61w6d-hello-2.12.1.tar.gz.drv": [
+             "out"
+           ]
+         },
+         "system": "x86_64-linux",
+         "builder": "/nix/store/dsd5gz46hdbdk2rfdimqddhq6m8m8fqs-bash-5.1-p16/bin/bash",
+         "args": [
+           "-e",
+           "/nix/store/9krlzvny65gdc8s7kpb6lkx8cd02c25b-default-builder.sh"
+         ],
+         "env": {
+           "buildInputs": "",
+           "builder": "/nix/store/dsd5gz46hdbdk2rfdimqddhq6m8m8fqs-bash-5.1-p16/bin/bash",
+           "cmakeFlags": "",
+           "configureFlags": "",
+           "depsBuildBuild": "",
+           "depsBuildBuildPropagated": "",
+           "depsBuildTarget": "",
+           "depsBuildTargetPropagated": "",
+           "depsHostHost": "",
+           "depsHostHostPropagated": "",
+           "depsTargetTarget": "",
+           "depsTargetTargetPropagated": "",
+           "doCheck": "1",
+           "doInstallCheck": "",
+           "mesonFlags": "",
+           "name": "hello-2.12.1",
+           "nativeBuildInputs": "",
+           "out": "/nix/store/g2m8kfw7kpgpph05v2fxcx4d5an09hl3-hello-2.12.1",
+           "outputs": "out",
+           "patches": "",
+           "pname": "hello",
+           "propagatedBuildInputs": "",
+           "propagatedNativeBuildInputs": "",
+           "src": "/nix/store/pa10z4ngm0g83kx9mssrqzz30s84vq7k-hello-2.12.1.tar.gz",
+           "stdenv": "/nix/store/kmfaajdpyyyg319vfqni5jm9wkxjmf73-stdenv-linux",
+           "strictDeps": "",
+           "system": "x86_64-linux",
+           "version": "2.12.1"
+         }
+       }
+     }
+
    #+END_SRC
 
-   Internally, this is what Nix does anyway: evaluate a derivation,
-   and then build it.
+** Packages are built in +two+ three parts
+
+\\
+
+   + *Part 0*: evaluate package definition, compute hashes, and create ~.drv~ file
+   + *Part 1*: evaluate derivation output
+   + *Part 2*: build package according to derivation
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build /nix/store/qcvlk255x98i46cg9vphkdw5pghrizsh-hello-2.12.1.drv
+     this path will be fetched (0.05 MiB download, 0.22 MiB unpacked):
+       /nix/store/g2m8kfw7kpgpph05v2fxcx4d5an09hl3-hello-2.12.1
+     copying path '/nix/store/g2m8kfw7kpgpph05v2fxcx4d5an09hl3-hello-2.12.1' from 'https://cache.nixos.org'...
+     /nix/store/g2m8kfw7kpgpph05v2fxcx4d5an09hl3-hello-2.12.1
+   #+END_SRC
 
 ** ~stdenv.mkDerivation~
 
 \\
 
-   The main way of making derivations is the ~mkDerivation~ function.
+   *Don't build derivations by hand*!
+
+   Instead use the ~mkDerivation~ function instead.
 
    Have a look at (some of) the arguments this function takes.
 
@@ -111,5 +267,87 @@
      , patches ? []
      , ... } @ attrs: ...
    #+END_SRC
+
+** A basic package
+
+\\
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {};
+     stdenv.mkDerivation {
+       name = "my-packge";
+       src = ./.;
+       installPhase = ''
+         mkdir $out
+         echo "Hello :)" >> $out/message.txt
+       '';
+     }
+   #+END_SRC
+
+   We use ~name~ instead of ~pname~ to avoid having to also set an
+   explicit ~version~ here.
+   
+** 
+
+   #+BEGIN_SRC shell
+      ❤ (theia) ~> nix-build ./message.nix
+     this derivation will be built:
+       /nix/store/j5b12i6gabrp868yimgxq2f6sd2prlqi-my-packge.drv
+     building '/nix/store/j5b12i6gabrp868yimgxq2f6sd2prlqi-my-packge.drv'...
+     patching sources
+     configuring
+     no configure script, doing nothing
+     building
+     no Makefile, doing nothing
+     installing
+     post-installation fixup
+     shrinking RPATHs of ELF executables and libraries in /nix/store/4q104yifnnn49gkwcsk4l2y1msc443zh-my-packge
+     strip is /nix/store/dq0xwmsk1g0i2ayg6pb7y87na2knzylh-gcc-wrapper-11.3.0/bin/strip
+     patching script interpreter paths in /nix/store/4q104yifnnn49gkwcsk4l2y1msc443zh-my-packge
+     checking for references to /build/ in /nix/store/4q104yifnnn49gkwcsk4l2y1msc443zh-my-packge...
+     /nix/store/4q104yifnnn49gkwcsk4l2y1msc443zh-my-packge
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC shell
+     ❤ (theia) ~> cat /nix/store/357fxrxpqcbrczdq0yfiijq6yn5igq7r-my-packge/message.txt
+     Hello :)
+   #+END_SRC
+
+** Some less common configuration
+
+\\
+
+   Not all parts of derivation building are configured via Nix!  Some
+   are handled by the derivation builder (written in bash).
+   ~dontUnpack~ is one of these.
+
+   How to find them?
+
+   1. Find ~nixpkgs~ on your system (e.g. via ~$NIX_PATH~)
+   2. ~nixpkgs/pkgs/stdenv/generic/setup.sh~
+
+** Some less common configuration
+
+\\
+
+   + dontUnpack (default ~true~)
+   + dontPatch (default ~true~)
+   + dontConfigure (default ~true~)
+   + dontBuild (default ~true~)
+   + doCheck (default ~false~)
+   + dontInstall (default ~true~)
+   + dontFixup (default ~true~)
+   + doInstallCheck (default ~false~)
+   + doDist (default ~false~)
+
+   Importantly: some of these defaults are _different_ based on what
+   builder is invoking them (more on that later)
+
+   
+** 
+
+   Some more useful things: https://nixos.org/manual/nix/stable/language/advanced-attributes.html
 
 ** [[file:README.org][Back to index]]

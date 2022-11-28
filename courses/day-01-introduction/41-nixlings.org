@@ -1,0 +1,51 @@
+#+Title: Nixlings
+#+Subtitle: Like Rustlings, but much less complete
+#+REVEAL_TITLE_SLIDE_BACKGROUND: ./imgs/nixlings.png
+#+SETUPFILE: ../../reveal.setup
+
+** Do you have Haskell experience?
+
+   If not, Nix might seem a bit confusing to you!
+
+\\
+
+   Get experience _reading and writing Nix code_, without any
+   packaging
+
+** Why focus on basic syntax?
+
+\\
+
+   + Build up familiarity with the language
+   + Learn how to solve general problems with Nix
+   + Yes, Nix is a programming language
+
+** 
+
+   *Importantly*, examples are not packaging related!  The idea is to
+   become familiar with Nix outside of a packaging context, which will
+   make it easier to apply it in a packaging context later!
+
+** Repository
+
+\\
+
+   https://codeberg.org/kookie/nixlings
+
+** Exercise structure
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       mkGreeting = greeting: towards: "${greeting} ${towards}";
+
+       output = {
+         message = # Invoke the above function so it returns "Hello Nixlings";
+       };
+     }
+   #+END_SRC
+
+   Run the examples with ~nix eval -f <file> output~
+
+** [[file:README.org][Back to index]]

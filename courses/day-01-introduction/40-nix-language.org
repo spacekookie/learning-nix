@@ -252,6 +252,32 @@
    + Assume defaults :: ~{ x, y ? 7 }: x + y~
    + Bind the full set :: ~{ x, y ? 7 } @ set: otherFunction (x + y) set~
    
+*** A potential foot-gun
+
+\\
+
+   #+BEGIN_SRC nix
+     let
+       function = { a ? 23, ... } @ args: args;
+     in
+     function { }
+   #+END_SRC
+
+   What does this function return?
+
+*** Yes, it returns ~{ }~
+
+\\
+
+   Isn't that delightfully confusing?
+
+   #+BEGIN_SRC nix
+     let
+       function = { a ? 23, ... } @ args: { inherit a; } // args;
+     in
+     function { }
+   #+END_SRC
+
 ** The "diamond reference"
 
 \\

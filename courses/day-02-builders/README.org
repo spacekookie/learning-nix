@@ -7,12 +7,16 @@
 Today we will cover the following subjects:
 
 + Writing /stand-alone Nix builders/
-+ What is ~mkDerivation~ and why do you want it?
++ What are /derivations/?
++ Creating and building derivations
 + Special cases around /fixed output derivations/
 
-** Sections
+** Slides
 
 1. [[./50-derivations.org][Derivations]]
 2. [[./51-fixed-output.org][Fixed output Derivations]]
-3. [[./60-exercise-packaging.org][(Exercise) Building your first packages]]
+3. 
 
+** Homework
+
+3. [[./60-exercise-packaging.org][(Exercise) Building your first packages]]

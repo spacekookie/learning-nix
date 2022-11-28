@@ -121,11 +121,12 @@
 
    #+BEGIN_SRC nix
      let
-       makeYouUnderstand = (rickAstley {
+       makeYouUnderstand = rickAstley {
          giveYouUp = "never";  letYouDown = "never";
          runAround = "never";  desertYou = "never";
          makeyouCry = "never"; sayGoodbye = "never";
-       });
+         tellALie = "never"; hurtYou = "never";
+       };
      in
      { }
    #+END_SRC
@@ -144,7 +145,7 @@
    Syntax is Haskell inspired:
 
    #+BEGIN_SRC nix
-     let cube = (x: y: z: x * y * z)
+     let cube = x: y: z: x * y * z;
      in
      (cube 2 4 8)
    #+END_SRC

@@ -12,6 +12,7 @@ This file contains common reveal.js export settings for org-mode.
 ** Get reveal.js from a CDN
 
    #+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+   // #+REVEAL_ROOT: file:///bonk/bonk/bonk/bonk/teaching-nix/reveal.js
 
 *** TODO Figure out why the local copy of reveal.js doesn't work!
 

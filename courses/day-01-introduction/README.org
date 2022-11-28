@@ -10,9 +10,13 @@ Today we will cover the following subjects:
 + How does /Nix/ work on a conceptual level?
 + What is the /Nix language/ syntax?
 
-** Sections
+** Slides
 
 1. [[./10-why-nix.org][Why Nix?]]
 2. [[./20-elevator-pitch.org][Elevator pitch]]
 3. [[./30-fundamentals.org][How does Nix do it?]]
 4. [[./40-nix-language.org][The Nix language]]
+
+** Homework
+
+5. [[./41-nixlings.org][Nixlings]]
