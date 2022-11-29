@@ -17,3 +17,4 @@ This file contains common HTML export settings for org-mode.
    sub-directory (where the overviews are stored).
    
    #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="overview.css"> <link rel="stylesheet" type="text/css" href="../../overview.css">
+   #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="overview.css"> <link rel="stylesheet" type="text/css" href="../../../../overview.css">

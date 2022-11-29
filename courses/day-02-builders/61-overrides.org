@@ -11,3 +11,5 @@
    1. Change the source
    2. Figure out the build hash
    3. Fix compilation problems that come up (if any)
+
+** [[file:README.org][Back to index]]

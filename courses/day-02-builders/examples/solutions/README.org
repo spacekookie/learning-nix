@@ -1,0 +1,34 @@
+#+Title: Excercise Solutions
+#+SETUPFILE: ../../../../html.setup
+
+This directory contains the solutions to the excercises from *day 2*.
+
+Check [[../../README.org][day-02-builders]] for an overview!
+
+** Tokei
+
+This is a Rust application which can be built with
+~rustPlatform.buildRustPackage~!
+
+#+INCLUDE: "./tokei.nix" src nix
+
+** Doge
+
+This is a Python application which can be built with
+~pythonPackages.buildPythonPackage~.  Note: th latest version of the
+program isn't packaged on Pypi.  In this example we use ~fetchPypi~ to
+demonstrate how it works, and thus _must_ use version 3.5.0.
+
+
+#+INCLUDE: "./doge.nix" src nix
+
+** Ncdu
+
+This is a Zig and ncuses program.  We can use ~mkDerivation~ to build
+it, but must customize the build environment slightly to accomodate
+the Zig compiler's assumptions about what kind of system it is running
+on (see comments in the file).
+
+
+#+INCLUDE: "./ncdu.nix" src nix
+

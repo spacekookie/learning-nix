@@ -43,7 +43,7 @@
        # ...
   
        hdr-plus = callPackage ../applications/graphics/hdr-plus {
-       stdenv = clangStdenv;
+         stdenv = clangStdenv;
        };
   
        heimer = libsForQt5.callPackage ../applications/misc/heimer { };
@@ -76,6 +76,66 @@
    + Then call the package function with _only_ those parameters
    + Implemented in ~lib/customisation.nix~ (if you're curious how it
      works)
+
+*** Yes, you can use it yourself
+
+\\
+
+   ~callPackage~ performs some /magic/ which you may want to opt-into
+
+   1. Load ~<nixpkgs>~
+   2. Invoke ~callPackage~ with your package definition
+   3. A package definition consists of a function which accepts an
+      attribute set and returns a derivation
+   4. Parameter attribute set *must not* include ~{ ... }~
+   5. Pass an additional attribute set with configuration to
+      ~callPackage~ (can be ~{ }~)
+
+*** 
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> { };
+     callPackage
+       { lib, stdenv, fetchurl, zig, ncurses }: stdenv.mkDerivation {
+         pname = "ncdu";
+
+         ...
+       }
+         { } 
+   #+END_SRC
+
+*** Why?
+
+\\
+
+   + Slighly nicer package definition (no need to figure out where packages are defined)
+   + Easier cross-compilation!
+
+*** 
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {
+       crossSystem = (import <nixpkgs/lib>).systems.examples.aarch64-multiplatform // {
+         rustc.config = "aarch64-linux-gnu";
+       };
+     };
+     callPackage ( ... ) { }
+   #+END_SRC
+
+*** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build ./call-package.nix
+     this derivation will be built:
+       /nix/store/6zw0104k6nm0vrmvdx1bpwd1jarjhghd-ncdu-aarch64-unknown-linux-gnu-2.2.1.drv
+     these 19 paths will be fetched (43.16 MiB download, 224.03 MiB unpacked):
+     ...
+      ❤ (theia) ~> file ./result/bin/tokei
+     /nix/store/xs7vbi3g48x7f25byvx4hjy5as27hqr9-tokei-aarch64-unknown-linux-gnu-12.1.2/bin/tokei:
+     ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter
+     /nix/store/xzk2l5c6nmr0qskyij1jvbpsv9a1b7ky-glibc-aarch64-unknown-linux-gnu-2.35-163/lib/ld-linux-aarch64.so.1,
+     for GNU/Linux 2.6.32, not stripped
+   #+END_SRC
 
 ** stdenv
 
@@ -118,12 +178,12 @@
    | Pre             | Phase             | Post             |
    |-----------------+-------------------+------------------|
    | preUnpack       | unpackPhase       | postUnpack       |
-   | prePatch        | /patchPhase/      | postPatch        |
+   | prePatch        | _patchPhase_      | postPatch        |
    | preConfigure    | configurePhase    | postConfigure    |
-   | preBuild        | /buildPhase/      | postBuild        |
+   | preBuild        | _buildPhase_      | postBuild        |
    | preCheck        | checkPhase        | postCheck        |
-   | preInstall      | /installPhase/    | postInstall      |
-   | preFixup        | /fixupPhase/      | postFixup        |
+   | preInstall      | _installPhase_    | postInstall      |
+   | preFixup        | _fixupPhase_      | postFixup        |
    | preInstallCheck | installCheckPhase | postInstallCheck |
    | preDist         | distPhase         | postDist         |
 
@@ -148,7 +208,7 @@
 
    #+BEGIN_SRC nix
      stdenv.mkDerivation {
-       RUST_BACKTRACE = "1";
+       CRASH_REPORTER = "${my_crash_reporter}/bin/boom";
   
        # ...
      }     
@@ -164,7 +224,7 @@
   
        configurePhase = ''
          substituteInPlace agent/platform/platform_unix.go \
-         --replace '"lsb_release"' '"${lsb-release}/bin/lsb_release"'
+           --replace '"lsb_release"' '"${lsb-release}/bin/lsb_release"'
          echo "${version}" > VERSION
        '';
   
@@ -310,23 +370,27 @@
 \\
 
    #+BEGIN_SRC nix
-     { stdenv, lib, pkgs, ... } @ args:
-
-     with (import ./builder.nix args);
-     pkgs.emacsWithPackages (epkgs:
-       let
-         include = path: (import path { inherit buildModule pkgs epkgs; });
-         modules = [
-           ./base ./move-lines ./multi-cursor
-           ./kookie-notmuch ./notmuch-rules
-           ./org ./rust ./theme
-         ];
-         kookie-config = bootstrap (map (p: include p) modules);
-       in
-         [ kookie-config ])     
+     self: super: {
+       buildEmacsWithPlan =  plan:
+         self.pkgs.emacs-gtk.pkgs.withPackages (epkgs:
+           let
+             builder = import ./builder.nix self;
+             includeOne = path: (import path {
+               inherit (self) pkgs;
+               buildModule = builder.buildModule;
+               epkgs = self.emacsPackages;
+             });
+        
+             elib = { ## This is an attribute set because we MAY want to
+                      ## expand it in the future!
+               buildModuleTree = modules: (builder.bootstrap (map (p: includeOne p) modules));
+             };
+           in
+             ## Load the plan.nix file and select the provided plan
+             ((import ./plans.nix self)."${plan}" elib epkgs));
    #+END_SRC
 
-   https://cyberchaos.dev/kookie/nomicon/-/blob/main/infra/libkookie/overlays/kookie/emacs/default.nix
+   https://cyberchaos.dev/kookie/kookie.el
 
 *** 
 

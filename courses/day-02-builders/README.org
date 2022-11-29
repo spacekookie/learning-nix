@@ -20,6 +20,7 @@ Today we will cover the following subjects:
 
 ** Homework
 
-5. [[./60-exercise-packaging.org][Building some packages]]
-6. [[file:61-overrides.org][Override sources]]
++ [[./60-exercise-packaging.org][Building some packages]]
++ [[file:61-overrides.org][Override sources]]
 
+** [[file:examples/solutions/README.org][Excercise Solutions]]

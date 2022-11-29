@@ -1,0 +1,102 @@
+#+Title: Pinning sources 📌
+
+** Problem
+
+   How do you currently manage your ~<nixpkgs>~ dependency?
+
+   + ~nix-channel~ :: impure; nixpkgs may change at any time
+   + Local nixpkgs checkout :: more or less convenient.  If you are
+     going down this route I recommend a git-submodule or git-subtree
+   + Flakes :: The hot new shit that everyone is talking about
+
+** Subtree & Submodule
+
+\\
+
+   + Lock a specific configuration state to a particular nixpkgs
+     version.
+   + Rolling back configuration _also_ rolls back nixpkgs
+     automatically.
+   + Subtrees _can_ be heavy on a repository, because the entire
+     history is merged
+     + They do potentially make upstream contributions easier though.
+
+** Flakes
+
+\\
+
+   Flakes allow you to specify your Nix dependencies in a declarative
+   way.
+
+   #+BEGIN_SRC nix
+     # flake.nix
+     {
+       inputs = {
+         home-manager.url = "github:nix-community/home-manager";
+       };
+     }
+   #+END_SRC
+
+   #+BEGIN_SRC console
+     ❤ (theia) ~> nix flake lock --update-input home-manager
+   #+END_SRC
+
+** Flake inputs
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       description = "hello-flake";
+       inputs = {
+         nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+         home-manager = {
+           url = "github:nix-community/home-manager";
+           inputs.nixpkgs.follows = "nixpkgs";
+         };
+       };
+     }
+   #+END_SRC
+
+** Flake outputs
+
+\\
+
+   #+BEGIN_SRC nix
+     {
+       # ...
+
+       outputs = { self, nixpkgs, ... }:
+         let system = "x86_64-linux";
+         in
+           {
+             defaultPackage."${system}" = with import nixpkgs { inherit system; };
+               pkgs.hello;
+           };
+
+     }
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix flake lock
+     ...
+      ❤ (theia) ~> ls
+     flake.lock  flake.nix
+   #+END_SRC
+
+** 
+
+** ⚠️ Flakes are experimental
+
+\\
+
+   + Flakes are still being developed
+     + https://github.com/NixOS/rfcs/pull/49 (initial RFC which didn't land)
+     + Work ongoing behind ~--experimental-features flake~ argument
+     + More RFCS: RFC#123, RFC#105, probably more to come :)
+   + https://nixos.org/manual/nix/stable/command-ref/new-cli/nix3-flake.html#flake-references
+   + I don't use flakes, so I can't give you a lot of insight on it
+
+** [[file:README.org][Back to index]]
