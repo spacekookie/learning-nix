@@ -1,0 +1,13 @@
+#+Title: Overriding package sources
+#+SETUPFILE: ../../reveal.setup
+
+** 
+
+\\
+
+   Take a package from ~nixpkgs~ and roll it back to a previous
+   version.
+
+   1. Change the source
+   2. Figure out the build hash
+   3. Fix compilation problems that come up (if any)

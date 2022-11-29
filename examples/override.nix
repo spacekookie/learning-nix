@@ -1,5 +1,7 @@
 with import <nixpkgs> {};
-
-self: super: {
-  htop = self.callPackage ./htop { htop = super.htop; }
+{
+  my-git = pkgs.git.override {
+    svnSupport = true;
+    sendEmailSupport = true;
+  };
 }

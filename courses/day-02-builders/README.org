@@ -15,8 +15,11 @@ Today we will cover the following subjects:
 
 1. [[./50-derivations.org][Derivations]]
 2. [[./51-fixed-output.org][Fixed output Derivations]]
-3. 
+3. [[file:52-special-builders.org][Special builders]]
+4. [[file:53-overrides.org][Overrides]]
 
 ** Homework
 
-3. [[./60-exercise-packaging.org][(Exercise) Building your first packages]]
+5. [[./60-exercise-packaging.org][Building some packages]]
+6. [[file:61-overrides.org][Override sources]]
+

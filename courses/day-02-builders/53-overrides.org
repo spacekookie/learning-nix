@@ -1,0 +1,90 @@
+#+Title: Override & OverrideAttr
+#+SETUPFILE: ../../reveal.setup
+
+** Problem
+
+\\
+
+   How to change a package without having to re-write it yourself?
+
+** Solution
+
+\\
+
+   Overrides!
+
+** Basic idea
+
+\\
+
+   + ~override~ and ~overrideAttr~ are special functions implemented
+     around derivations
+   + An example from day 1: ~pkgs.wine.override { ... }~
+   + What's their difference?
+
+** Override
+
+\\
+
+   + Specific to each package
+   + Acts on the derivation _output_
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> {};
+     {
+       my-git = pkgs.git.override {
+         svnSupport = true;
+         sendEmailSupport = true;
+       };
+     }
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC shell
+      ❤ (theia) ~> nix-build ./override.nix
+     this derivation will be built:
+       /nix/store/rn2qbgzkc4b8h7zsflhdyn9rhsjy0mp1-git-with-svn-2.38.1.drv
+     building '/nix/store/rn2qbgzkc4b8h7zsflhdyn9rhsjy0mp1-git-with-svn-2.38.1.drv'...
+     ...
+   #+END_SRC
+
+** ~overrideAttrs~
+
+\\
+
+   + Generic for /all*/ derivations
+   + Acts on the _inputs_ to ~mkDerivation~
+     + It therefore allows much more generic overrides
+
+   /*any derivation which is wrapped in 'makeOverridable'/
+   
+** 
+
+   ~overrideAttrs~ takes a function which takes an attribute set and
+   returns an attribute set.  Only changed keys should be returned.
+
+\\
+   
+   #+BEGIN_SRC nix
+     some-package.overrideAttrs { ... }: { /* ... */  }
+   #+END_SRC
+
+** 
+
+   #+BEGIN_SRC nix
+     htop.overrideAttrs ({ patches ? [], nativeBuildInputs ? [], postConfigure ? "", ... }: {
+       patches = patches ++ [ ./0001-htop-untruncated-username.patch ];
+     })
+   #+END_SRC
+
+** ~overrideDerivation~
+
+\\
+
+   + _Extremely_ special function which is very rarely useful
+   + Override attributes that ~mkDerivation~ passes to ~derivation~
+   + You might see this in some places but you probably don't need/
+     want to use it!
+
+** [[file:README.org][Back to index]]

@@ -79,50 +79,6 @@
        '';
      }
    #+END_SRC
-
-** Overrides
-
-\\
-
-   You _can_ override packages without an overlay, for example in-line
-   to your configuration!
-
-   #+BEGIN_SRC nix
-     { pkgs, ... }:
-     {
-       environment.systemPackages = [
-         (pkgs.git.override {
-           svnSupport = true;
-           sendEmailSupport = true;
-         })
-       ];
-     }
-   #+END_SRC
-
-** ~override~ vs ~overrideAttrs~
-
-\\
-
-   + ~override~ overrides attributes in a _derivation_
-   + ~overrideAttrs~ overrides attributes passed _to ~mkDerivation~_
-
-** 
-
-   Let's put it all together and override actually htop!
-
-   #+BEGIN_SRC nix
-     import <nixpkgs> {
-       overlays = [
-         (import overlays/patches);
-         # ...
-       ];
-     }
-   #+END_SRC
-
-   #+BEGIN_SRC console
-      ❤ (theia) ~/sys> ls overlays
-     kookie/  patches/  rust/  staging/
-   #+END_SRC
    
 ** 
    

@@ -64,7 +64,7 @@
      }
    #+END_SRC
 
-   What happens if `latest.tar.gz` changes?
+   What happens if ~latest.tar.gz~ changes?
 
 ** Caching 🔥
 

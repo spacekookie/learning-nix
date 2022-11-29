@@ -276,7 +276,7 @@
      with import <nixpkgs> {};
      stdenv.mkDerivation {
        name = "my-packge";
-       src = ./.;
+       dontUnpack = true;
        installPhase = ''
          mkdir $out
          echo "Hello :)" >> $out/message.txt
@@ -315,15 +315,19 @@
      Hello :)
    #+END_SRC
 
-** Some less common configuration
+** Environment variables
 
 \\
 
-   Not all parts of derivation building are configured via Nix!  Some
-   are handled by the derivation builder (written in bash).
-   ~dontUnpack~ is one of these.
+   Any _additional key_ passed to ~mkDerivation~ is set as an
+   environment variable in the build environment
 
-   How to find them?
+   Some of these variables are used by Nix builds internally (for
+   example ~dontUnpack~).  Everything else is up to you.
+
+** Some less common configuration
+
+\\
 
    1. Find ~nixpkgs~ on your system (e.g. via ~$NIX_PATH~)
    2. ~nixpkgs/pkgs/stdenv/generic/setup.sh~
@@ -345,7 +349,6 @@
    Importantly: some of these defaults are _different_ based on what
    builder is invoking them (more on that later)
 
-   
 ** 
 
    Some more useful things: https://nixos.org/manual/nix/stable/language/advanced-attributes.html

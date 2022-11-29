@@ -1,0 +1,80 @@
+#+Title: Special builders
+#+SETUPFILE: ../../reveal.setup
+
+** Do I really have to build my ~$LANG~ application by hand?
+
+** No
+
+** Remember ~build-support~ ?
+
+\\
+
+   + Commonly used languages have specific build support in nixpkgs
+   + Pros: each builder can handle special cases
+   + Cons: each builder handles special cases
+
+** Rust builder
+
+\\
+
+   #+BEGIN_SRC nix
+     rustPlatform.buildRustPackage rec {
+       pname = "bat";
+       version = "0.22.1";
+
+       src = fetchFromGitHub {
+         owner = "sharkdp";
+         repo = pname;
+         rev = "v${version}";
+         sha256 = "sha256-ye6GH4pcI9h1CNpobUzfJ+2WlqJ98saCdD77AtSGafg=";
+       };
+
+       cargoSha256 = "sha256-ye6GH4pcI9h1CNpobUzfJ+2WlqJ98saCdD77AtSGafg=";
+
+       ...
+     }
+   #+END_SRC
+
+** Go builder
+
+\\
+
+   #+BEGIN_SRC nix
+     buildGoModule rec {
+       pname = "dive";
+       version = "0.10.0";
+
+       src = fetchFromGitHub {
+         owner = "wagoodman";
+         repo = pname;
+         rev = "v${version}";
+         sha256 = "sha256-1pmw8pUlek5FlI1oAuvLSqDow7hw5rw86DRDZ7pFAmA=";
+       };
+
+       vendorSha256 = "sha256-YPkEei7d7mXP+5FhooNoMDARQLosH2fdSaLXGZ5C27o=";
+     }
+   #+END_SRC
+
+** Python builder
+
+\\
+
+   #+BEGIN_SRC nix
+     buildPythonPackage rec {
+       version = "0.7.5";
+       pname = "pickleshare";
+
+       src = fetchPypi {
+         inherit pname version;
+         sha256 = "87683d47965c1da65cdacaf31c8441d12b8044cdec9aca500cd78fc2c683afca";
+       };
+     }
+   #+END_SRC
+
+** 
+
+   Not all specific builders are defined in ~build-support~ (that would be too boring).
+
+   But a lot of them are.
+
+** [[file:README.org][Back to index]]
