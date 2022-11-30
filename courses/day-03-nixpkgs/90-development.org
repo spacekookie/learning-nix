@@ -95,6 +95,8 @@
      thing?)
    + Try to be consistent about it? 😅
 
+**  Nixpkgs formatting
+
 *** Nixpkgs formatting: attribute sets
 
 \\
@@ -168,7 +170,7 @@
      ];
    #+END_SRC
 
-*** Code formatters
+** Code formatters
 
 \\
 
@@ -177,11 +179,11 @@
    organisation-wide style.
 
    + https://github.com/nix-community/nixpkgs-fmt
-     + Written in Rust
      + Aims to create consistent styles without many options
    + https://github.com/serokell/nixfmt
-     + Written in Haskell
      + Highly configurable
+   + https://github.com/kamadorueda/alejandra
+     + Similarly "no configuration"
 
 ** Shell files
 

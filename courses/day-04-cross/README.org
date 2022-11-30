@@ -6,13 +6,17 @@
 
 Today we will cover the following subjects:
 
-+ What is cross-compilation (on a philosophical level)?
++ What is cross-compilation?
 + Using /Nix/ for cross-compilation
 + Using /nixpkgs/ for cross-compilation
 
 
-** Sections
+** Slides
 
 1. [[./10-what-is.org][What even _is_ cross compilation??]]
 2. [[./20-basic-usage.org][Basic cross-compilation]]
 3. [[./30-build-inputs.org][Build inputs and other weirdnesses]]
+
+** Homework
+
+1. [[file:40-aarch64-example.org][aarch64 example]]

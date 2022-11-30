@@ -1,12 +1,13 @@
-#+Title: Building a safe shell script
+#+Title: Nixpkgs exercises
 #+SETUPFILE: ../../reveal.setup
 
-** Exercise
+** Exercise #1
 
 \\
 
-   Using writeTextFile with shell-check for safer scripts.
-
+   + Using ~lib.writeTextFile~ with shell-check for safer scripts.
+   + Do you have some shell script on your computer you use frequently?
+   
    #+BEGIN_SRC nix
      writeTextFile =
        { name # the name of the derivation
@@ -16,6 +17,20 @@
        , checkPhase ? ""    # syntax checks, e.g. for scripts
        , meta ? { }
        }:     
+   #+END_SRC
+
+** Exercise #2
+
+\\
+
+   + Take one of the packages you wrote yesterday
+   + Use ~callPackage~ to build it
+
+   #+BEGIN_SRC nix
+     with import <nixpkgs> { };
+     callPackage ({ ...dependencies... }:
+       ...your package definition here...)
+       { }
    #+END_SRC
 
 ** [[file:README.org][Back to index]]

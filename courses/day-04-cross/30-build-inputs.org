@@ -64,7 +64,7 @@
 
        strictDeps = true;
 
-       buildInputs = with pkgs; [ zip ncurses ];
+       buildInputs = with pkgs; [ zig ncurses ];
 
        # ...
      }
@@ -107,6 +107,8 @@
        buildInputs = with pkgsHostTarget.xorg; [ libX11 libXext ];
      }
    #+END_SRC
+
+** About those systems...
 
 ** More callPackage magic
 
