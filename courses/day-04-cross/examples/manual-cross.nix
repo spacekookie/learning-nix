@@ -1,5 +1,5 @@
 with import <nixpkgs> {
-  # crossSystem.system = "aarch64-linux";
+  crossSystem.system = "aarch64-linux";
 };
 
 stdenv.mkDerivation rec {
@@ -16,11 +16,8 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = with pkgsBuildHost; [
     pkg-config meson ninja
   ];
-  buildInputs = with pkgsHostTarget.xorg; [ libX11 libXext ];
 
-  strictDeps = true;
-  
-  # buildInputs = with pkgs; [
-  #   pkg-config meson ninja xorg.libX11 xorg.libXext
-  # ];
+  buildInputs = with pkgsHostTarget; [
+    pkg-config meson ninja xorg.libX11 xorg.libXext
+  ];
 }

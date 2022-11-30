@@ -6,12 +6,12 @@ callPackage
   # Which takes a function as a paramater.  This function must accept
   # any inputs the package needs (but no more, and '...' is forbidden
   # here!).  This function returns a derivation
-  ({ lib, stdenv, rustPlatform, fetchFromGitHub }:
+  ({ stdenv, rustPlatform, fetchFromGitHub }:
     rustPlatform.buildRustPackage rec {
       pname = "tokei";
       version = "12.1.2";
       
-      src = pkgs.fetchFromGitHub {
+      src = fetchFromGitHub {
         owner = "XAMPPRocky";
         repo = pname;
         rev = "v${version}";
@@ -23,4 +23,6 @@ callPackage
 
   # Finally callPackage accepts an attribute set with optional
   # overrides.  If none are needed, provide the empty set.
-  { }
+  {
+    stdenv
+  }

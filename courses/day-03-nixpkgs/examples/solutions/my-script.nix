@@ -1,6 +1,6 @@
 let
   pkgs = import <nixpkgs> { };
-  writeCheckedScript = name: text: pkgs.writeTextFile rec {
+  writeCheckedScript = name: text: pkgs.writeTextFile {
     inherit name text;
     executable = true;
     destination = "/bin/mygit";
