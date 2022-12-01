@@ -82,17 +82,13 @@ Modules don't _exactly_ solve this problem, but they avoid it!
 
    #+BEGIN_SRC nix
      { 
-       config = {
-         services = {
-           nginx = {
-             enable = true;
-             user = "www";
-             group = "uwu";
-           };
+       services = {
+         nginx = {
+           enable = true;
+           user = "www";
+           group = "uwu";
          };
        };
-  
-       options = {};
      }
    #+END_SRC
 

@@ -12,11 +12,15 @@ Today we will cover the following subjects:
 + Advanced type shennigans
 
 
-** Sections
+** Slides
 
 1. [[./10-module-basics.org][Module basics]]
 2. [[./20-using-modules.org][Using modules]]
-3. [[./30-exercise-configuration.org][(Exercise) Building your first NixOS system]]
 4. [[./40-module-anatomy.org][Module anatomy]]
 5. [[./60-advanced-types.org][Advanced types]]
-6. [[./70-exercise-modules.org][(Exercise) Building a module abstraction]]
+
+** Homework
+
+3. [[./30-exercise-configuration.org][Building your first NixOS system]]
+6. [[./70-exercise-modules.org][Building a module abstraction]]
+

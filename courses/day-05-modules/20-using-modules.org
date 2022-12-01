@@ -41,7 +41,7 @@
       ❤ (theia) ~> sudo journalctl -u helloService.service
      -- Logs begin at Sat 2020-10-24 16:54:30 CEST, end at Tue 2021-01-19 15:37:37 CET. --
      Jan 19 15:36:38 uwu systemd[1]: Starting helloService.service...
-     Jan 19 15:36:38 uwu hello[1302]: Hello, nyantec!
+     Jan 19 15:36:38 uwu hello[1302]: Hello, $company_name!
      Jan 19 15:36:38 uwu systemd[1]: helloService.service: Succeeded.
      Jan 19 15:36:38 uwu systemd[1]: Finished helloService.service.
    #+END_SRC
@@ -53,7 +53,7 @@
    Create a user with a SSH key access.
 
    The NixOS ~users~ module also ensures that users are created, and
-   retured (UIDs remains in-use!) when configuration is removed.
+   retired (UIDs remains in-use!) when configuration is removed.
 
    #+BEGIN_SRC nix
      { config, ... }:
