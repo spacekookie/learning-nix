@@ -33,19 +33,13 @@ system, cross-compilation, and other special niches.
   details, such as understanding dependencies and overriding build
   mechanisms.
 
-+ [[file:courses/day-03-nixpkgs/README.org][Day 3: Nixpkgs]] :: This course is an introduction into /nixpkgs/, a
-  gigantic repository set of over 80,000 packages.  Nixpkgs allows you
-  to re-use packaging code other users have contributed.  As part of
-  this course we cover using nixpkgs tools, as well as how to
-  contribute things you have made back into nixpkgs.
++ [[file:courses/day-03-advanced/README.org][Day 3: Advanced Concepts]] :: This course covers an introduction into
+  /nixpkgs/, a repository set of over 80,000 packages and many
+  different Nix utilities for creating new packages and modules.
+  Furthermore this course touches on /flakes/ and more advanced
+  concepts such as /cross compilation/.
 
-+ [[file:courses/day-04-cross/README.org][Day 4: Cross-compilation]] :: In this course we cover
-  cross-compilation with Nix.  This includes theoretical background on
-  what /cross-compilation/ is, some Nix-specific concepts, and
-  practical examples for packaging embedded (Rust) code, as well as
-  fixing existing cross-compilation errors.
-
-+ [[file:courses/day-05-modules/README.org][Day 5: Module system]] :: Nix is a powerful configuration language.
++ [[file:courses/day-05-modules/README.org][Day 4: Module system]] :: Nix is a powerful configuration language.
   If you run NixOS on your system, you may have already used modules!
   This course demystifies their functionality and provides a set of
   examples on how to build your own module abstractions.

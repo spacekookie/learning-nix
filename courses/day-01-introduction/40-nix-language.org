@@ -1,39 +1,36 @@
 #+Title: The Nix language
 #+SETUPFILE: ../../reveal.setup
 
+** What is "Nix"
+
+\\
+
++ "Nix" the programming language...
++ ...executed by the "Nix Daemon"...
++ ...which interacts with the "Nix" CLIs
+
 ** Technical overview
 
 \\
 
-   + The Nix language is executed by the ~nix-daemon~
-   + ~nix-daemon~ is implemented in C++ and Nix
-   + ~nix-<command>~ is the set of old, deprecated CLIs
-   + ~nix <command>~ is the new, experimental CLI
-
-** Technical overview
-
-\\
-
-   + ~nixpkgs~ :: the nix standard library
-   + ~nixpkgs/lib~ :: generators and iterator tools
-   + ~nixpkgs/stdenv~ :: build environment utilities
-   + ~nixpkgs/pkgs~ :: main package tree
-   + ~nixpkgs/pkgs/build-support~ :: various build utilities (like
-     ~fetchFromGitHub~)
++ Language: Nix
++ Daemon: ~nix-daemon~
++ CLIs: ~nix-<command>~ and ~nix <command>~
++ Stdlib: ~nixpkgs~
 
 ** Types 1
 
 \\
 
-   + Attribute set (or "attrset") :: A map of keys and values of
-     arbitrary types.  Key = Value pairs must end with a ~;~.
++ Attribute set (or "attrset") :: A map of keys and values of
+  arbitrary types.  Key = Value pairs must end with a ~;~.
 
-     ~{ a = 13; b = 12; c = 11; hello = true; }~
+  ~{ a = 13; b = 12; c = 11; hello = true; }~
 
-   + Lists :: A list of arbitrary types.  Can contain mixed types.
-     Values are space-separated.
++ Lists :: A list of arbitrary types.  Can contain mixed types.
+  Values are space-separated.
 
-     ~[ 13 12 11 "hello" true ]~
+  ~[ 13 12 11 "hello" true ]~
 
 ** Types 2
 
@@ -59,7 +56,6 @@
    + Booleans (~true~ and ~false~)
    + Paths (~/nix/store~ or ~./my-module~)
    + Null (~null~)
-
 
 ** Quiz: Semantic structure
 

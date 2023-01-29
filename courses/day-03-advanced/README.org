@@ -1,0 +1,28 @@
+#+Title: Advanced Concepts | Day 3
+#+Author: Katharina Fey
+#+SETUPFILE: ../../html.setup
+
+[[../../README.org][Back to Index]]
+
+Today we will cover a few different advanced concepts around Nix.
+
++ What is ~nixpkgs~ and how does it work?
++ Exploring and understanding Nix ecosystems
++ Source pinning and management
++ Cross compilation with Nix
+  
+** Slides
+
+1. [[./70-nixpkgs.org][Nixpkgs]]
+2. [[./80-overlays-and-flakes.org][Overlays]]
+3. [[file:85-flakes.org][Flakes]]
+4. [[./90-development.org][Nix for developers]]
+5. Cross Compilation
+   1. [[./10-what-is.org][What even _is_ cross compilation??]]
+   2. [[./20-basic-usage.org][Basic cross-compilation]]
+   3. [[./30-build-inputs.org][Build inputs and other weirdnesses]]
+
+** Homework
+
+1. [[./71-nixpkgs-exercise.org][Nixpkgs excercises]]
+2. [[file:40-aarch64-example.org][Cross compilation: aarch64]]

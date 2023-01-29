@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 let
   cowFile = pkgs.runCommand "cowfile-gen" {} ''
     mkdir $out
@@ -6,18 +6,15 @@ let
   '';
 in
 {
-  networking.firewall.allowedTCPPorts = [ 80 ];
-  
-  services.nginx = {
-    enable = true;
-    virtualHosts."main" = {
-      default = true;
-      locations."/" = {
-        root = cowFile;
-      };
-    };
+  fileSystems."/" = {
+    device = "zpool/root";
+    fsType = "ext4";
   };
 
-  users.users.root.password = "aoesunth";
+  boot.loader.grub.device = "/dev/fake";
+
+  environment.etc."foo".text = "bar";
+  
+  users.users.root.password = "1234";
   users.mutableUsers = false;
 }

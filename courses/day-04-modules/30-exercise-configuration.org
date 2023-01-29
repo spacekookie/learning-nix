@@ -1,0 +1,60 @@
+#+Title: Let's build a small nginx VM
+#+SETUPFILE: ../../reveal.setup
+
+** Overview
+
+\\
+
+   + Build a VM which includes ~echo "Hello" | cowsay > cow.txt~
+   + Use the nginx module to serve this file on port 80
+   + Don't forget to open that port in the firewall
+
+   #+BEGIN_SRC console
+     nix build -f '<nixpkgs/nixos>' vm -I nixos-config=./nginx.nix
+     env QEMU_NET_OPTS="hostfwd=tcp::8080-:80" result/bin/run-nixos-vm
+   #+END_SRC
+   
+** 
+
+\\
+
+   #+BEGIN_SRC nix
+     { pkgs, ... }:
+     let
+       cowFile = pkgs.runCommand "cowfile-gen" {} ''
+         mkdir $out
+         echo "Hello" | ${pkgs.cowsay}/bin/cowsay > $out/cow.txt
+       '';
+     in
+     {
+       services.nginx = {
+         # ...
+       };
+
+       # For if you need to access the VM to debug it
+       users.users.root.password = "1234";
+       users.mutableUsers = false;
+     }
+   #+END_SRC
+
+** About VMs...
+
+\\
+
+   You may have to delete your VM image manually after re-building.
+
+   Why?
+
+** VMs are your hard drive
+
+\\
+
+   When re-building a system, nix will not try to change your system
+   state.
+
+   Because VMs _are_ your state, the image won't be overwritten by the
+   new changes (this could otherwise cause data-loss).
+
+   So: delete the image yourself to force Nix to re-generate it.
+
+** [[./README.org][Back to index]]

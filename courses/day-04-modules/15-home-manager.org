@@ -1,0 +1,16 @@
+#+Title: home-manager
+#+SETUPFILE: ../../reveal.setup
+
+
+** Collection of userspace modules
+
+** 
+
+** home-manager
+
+\\
+
+   + https://github.com/nix-community/home-manager
+   + ~nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager~
+   + ~nix-channel --add https://github.com/nix-community/home-manager/archive/release-22.05.tar.gz home-manager~
+   + ~nix-shell '<home-manager>' -A install~

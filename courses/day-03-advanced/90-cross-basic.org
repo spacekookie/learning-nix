@@ -1,0 +1,109 @@
+#+Title: Basic cross-compilation usage
+#+SETUPFILE: ../../reveal.setup
+
+** pkgsCross
+
+\\
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build '<nixpkgs>' -A pkgsCross.aarch64-multiplatform.hello
+     these 2 paths will be fetched (5.87 MiB download, 27.83 MiB unpacked):
+       /nix/store/0ysynj4jhpnvljpy009lmxx7a39f4r1z-hello-aarch64-unknown-linux-gnu-2.12.1
+       /nix/store/mj933c0imsdcw2c8jda1rw25i0rr4xha-glibc-aarch64-unknown-linux-gnu-2.34-210
+     copying path '/nix/store/mj933c0imsdcw2c8jda1rw25i0rr4xha-glibc-aarch64-unknown-linux-gnu-2.34-210' from 'https://cache.nixos.org'...
+     copying path '/nix/store/0ysynj4jhpnvljpy009lmxx7a39f4r1z-hello-aarch64-unknown-linux-gnu-2.12.1' from 'https://cache.nixos.org'...
+
+      ❤ (theia) ~> file result/bin/hello                                                    
+     result/bin/hello: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /nix/store/mj933c0imsdcw2c8jda1rw25i0rr4xha-glibc-aarch64-unknown-linux-gnu-2.34-210/lib/ld-linux-aarch64.so.1, for GNU/Linux 2.6.32, not stripped
+     /nix/store/0ysynj4jhpnvljpy009lmxx7a39f4r1z-hello-aarch64-unknown-linux-gnu-2.12.1
+   #+END_SRC
+
+** The end
+
+** How does this work?
+
+\\
+
+   + ~pkgsCross~ is a set of package sets
+   + ~pkgsCross.aarch64-multiplatform~ is a package set
+   + The platform-specific set will configure nixpkgs in a specific
+     way to support cross-compilation
+
+** Tangent: ~pkgsStatic~
+
+\\
+
+   + A package set which allows for static linking of binaries
+   + Can be combined with ~pkgsCross~
+
+   #+BEGIN_SRC console
+      ❤ (theia) ~> nix-build '<nixpkgs>' -A pkgsCross.aarch64-multiplatform.pkgsStatic.hello
+     this path will be fetched (0.19 MiB download, 0.44 MiB unpacked):
+       /nix/store/a1akh1fcvyv9d3qaz92lrfklq86qw56g-hello-static-aarch64-unknown-linux-musl-2.12.1
+     copying path '/nix/store/a1akh1fcvyv9d3qaz92lrfklq86qw56g-hello-static-aarch64-unknown-linux-musl-2.12.1' from 'https://cache.nixos.org'...
+     /nix/store/a1akh1fcvyv9d3qaz92lrfklq86qw56g-hello-static-aarch64-unknown-linux-musl-2.12.1
+      ❤ (theia) ~> file result/bin/hello
+     result/bin/hello: ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), statically linked, not stripped
+   #+END_SRC
+
+** *Doubles* and Triples
+
+\\
+
+   + Doubles are 2-tuples of CPU Architecture and Kernel
+   + They are used to determine whether a system can run a
+     particular binary
+   + This is a concept in *Nix*, not in nixpkgs!
+   + This can also be overriden via ~--system~ parameter on the CLI
+   + You can query this value with ~builtins.currentSystem~
+
+** Doubles and *Triples*
+
+\\
+
+   + Triples are 4-tuples (obviously) although sometimes the 4th one
+     can be implicit
+   + Components are: CPU Arch, Vendor, Kernel, ABI/ libc
+   + This is a *nixpkgs* concept and can be overriden
+
+   #+BEGIN_SRC nix
+     import <nixpkgs> {
+       crossSystem = {
+         config = "armv7l-unknown-linux-gnueabihf";
+       };
+     }
+   #+END_SRC
+
+** pkgsCross in detail
+
+\\
+
+   + ~lib/systems/examples.nix~ defines a set of supported platforms
+   + ~pkgsCross~ is generated from this set
+
+   #+BEGIN_SRC nix
+     pkgsCross = lib.mapAttrs (n: crossSystem:
+       nixpkgsFun { inherit crossSystem; })
+       lib.systems.examples;
+   #+END_SRC
+
+** Platform attribute sets
+
+\\
+
+   + Allow precise configuration of a build target
+   + There's no comprehensive list of all settings you can set
+
+   #+BEGIN_SRC nix
+     armhf-embedded = {
+       config = "arm-none-eabihf";
+       libc = "newlib";
+       gcc = {
+         arch = "armv5t";
+         fpu = "vfp";
+       };
+     };
+   #+END_SRC
+
+** [[./README.org][Back to index]]
+
