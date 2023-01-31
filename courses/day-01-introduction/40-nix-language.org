@@ -266,7 +266,7 @@
 \\
 
    Isn't that delightfully confusing?
-
+   
    #+BEGIN_SRC nix
      let
        function = { a ? 23, ... } @ args: { inherit a; } // args;

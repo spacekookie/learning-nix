@@ -329,7 +329,7 @@
 
 \\
 
-   1. Find ~nixpkgs~ on your system (e.g. via ~$NIX_PATH~)
+   1. Find ~nixpkgs~ on your system (type ~<nixpkgs>~ in the repl)
    2. ~nixpkgs/pkgs/stdenv/generic/setup.sh~
 
 ** Some less common configuration

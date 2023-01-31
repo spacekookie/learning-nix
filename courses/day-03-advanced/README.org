@@ -13,9 +13,9 @@ Today we will cover a few different advanced concepts around Nix.
   
 ** Slides
 
-1. [[./70-nixpkgs.org][Nixpkgs]]
-2. [[./80-overlays-and-flakes.org][Overlays]]
-3. [[file:85-flakes.org][Flakes]]
+1. [[./10-nixpkgs.org][Nixpkgs]]
+2. [[./20-overlays-and-flakes.org][Overlays]]
+3. [[file:30-flakes-intro.org][Flakes]]
 4. [[./90-development.org][Nix for developers]]
 5. Cross Compilation
    1. [[./10-what-is.org][What even _is_ cross compilation??]]

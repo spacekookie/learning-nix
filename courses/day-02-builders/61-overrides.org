@@ -3,13 +3,54 @@
 
 ** 
 
-\\
-
    Take a package from ~nixpkgs~ and roll it back to a previous
    version.
 
    1. Change the source
    2. Figure out the build hash
    3. Fix compilation problems that come up (if any)
+
+** Example: eagle 9.6.2 -> 9.5.0
+
+\\
+
+#+BEGIN_SRC nix
+  with import <nixpkgs> {
+    config.allowUnfree = true;
+  };
+  eagle.overrideAttrs ({ src, version, ... }: {
+    version = "9.5.0";
+    src =
+      let
+        url = builtins.replaceStrings ["9.6.2" "9_6_2"] ["9.5.0" "9_5_0"] src.url;
+      in
+        pkgs.fetchurl {
+          inherit url;
+          sha256 = lib.fakeSha256;
+        };
+  })
+#+END_SRC
+
+** 
+
+#+BEGIN_SRC shell
+  these 2 derivations will be built:
+    /nix/store/3904kh32s3v70xp8wzz0z2ggda16jxy4-Autodesk_EAGLE_9.5.0_English_Linux_64bit.tar.gz.drv
+    /nix/store/3zayjzjjrjwnp0lpw82v27k66sv1r115-eagle-9.5.0.drv
+  building '/nix/store/3904kh32s3v70xp8wzz0z2ggda16jxy4-Autodesk_EAGLE_9.5.0_English_Linux_64bit.tar.gz.drv'...
+  
+  trying https://eagle-updates.circuits.io/downloads/9_5_0/Autodesk_EAGLE_9.5.0_English_Linux_64bit.tar.gz
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+  100  162M  100  162M    0     0  1997k      0  0:01:23  0:01:23 --:--:-- 4547k
+  error: hash mismatch in fixed-output derivation '/nix/store/3904kh32s3v70xp8wzz0z2ggda16jxy4-Autodesk_EAGLE_9.5.0_English_Linux_64bit.tar.gz.drv':
+           specified: sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+              got:    sha256-HmdkMZInYiqeWqRb2IO2pAgQUyKnoXA7e21WlJRUU3E=
+  error: 1 dependencies of derivation '/nix/store/3zayjzjjrjwnp0lpw82v27k66sv1r115-eagle-9.5.0.drv' failed to build
+#+END_SRC
+
+** 
+
+#+INCLUDE: "./examples/eagle.nix" src nix
 
 ** [[file:README.org][Back to index]]

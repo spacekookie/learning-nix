@@ -1,4 +1,4 @@
-#+Title: Pinning sources 📌
+#+Title: Flakes ❄️ & pinning sources 📌
 #+SETUPFILE: ../../reveal.setup
 
 ** How to manage Nix dependencies?
@@ -9,8 +9,9 @@
    + Local nixpkgs checkout :: this can be quite unreliable.
      Alternatively you can include a git-submodule or git-subtree in
      your configuration repository.
-   + Niv :: Similar to flakes in a lot of ways, but developed by the
-     community https://github.com/nmattia/niv
+   + Niv :: Similar to flakes in a lot of ways, but much smaller in
+     scope. Developed by community members
+     https://github.com/nmattia/niv
    + Flakes :: The hot new shit that everyone is talking about
 
 ** Subtree & Submodule
